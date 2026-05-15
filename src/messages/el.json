@@ -1,0 +1,14 @@
+{
+  "navigation": {
+    "home": "Αρχική",
+    "about": "Γιατρός",
+    "services": "Υπηρεσίες",
+    "booking": "Ραντεβού",
+    "contact": "Επικοινωνία"
+  },
+  "home": {
+    "heroTitle": "Premium οδοντιατρική φροντίδα στην Αθήνα",
+    "heroSubtitle": "Μια ήρεμη, σύγχρονη εμπειρία φροντίδας με άμεσο online booking.",
+    "bookButton": "Κλείστε ραντεβού"
+  }
+}

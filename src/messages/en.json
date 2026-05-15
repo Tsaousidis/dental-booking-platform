@@ -1,0 +1,14 @@
+{
+  "navigation": {
+    "home": "Home",
+    "about": "Doctor",
+    "services": "Services",
+    "booking": "Booking",
+    "contact": "Contact"
+  },
+  "home": {
+    "heroTitle": "Premium dental care in Athens",
+    "heroSubtitle": "A calm, modern care experience with instant online booking.",
+    "bookButton": "Book appointment"
+  }
+}
