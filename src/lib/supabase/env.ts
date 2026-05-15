@@ -21,6 +21,22 @@ export function getSupabaseBrowserEnv(): {
   return { supabaseUrl, supabaseAnonKey };
 }
 
+export function getSupabaseServiceEnv(): {
+  supabaseUrl: string;
+  supabaseServiceRoleKey: string;
+} {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!isValidHttpUrl(supabaseUrl) || !supabaseServiceRoleKey) {
+    throw new Error(
+      "Missing or invalid Supabase service environment variables.",
+    );
+  }
+
+  return { supabaseUrl, supabaseServiceRoleKey };
+}
+
 function isValidHttpUrl(value: string | undefined): value is string {
   if (!value) {
     return false;
