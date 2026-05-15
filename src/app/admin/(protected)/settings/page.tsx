@@ -9,8 +9,8 @@ export default async function AdminSettingsPage() {
     <div className="grid gap-6">
       <AdminPageHeader
         eyebrow="Admin"
-        title="Settings"
-        description="Edit the core clinic profile, appointment types, and booking rules from one calm page."
+        title="Ρυθμίσεις"
+        description="Επεξεργασία βασικών στοιχείων κλινικής, τύπων ραντεβού και κανόνων booking από μία απλή σελίδα."
       />
       <SettingsForm data={settings} />
     </div>

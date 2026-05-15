@@ -28,7 +28,7 @@ export function LoginForm() {
         </span>
       </label>
       <label className="grid gap-2 text-sm font-medium">
-        Password
+        Κωδικός
         <span className="flex min-h-12 items-center gap-3 border border-line bg-background px-4">
           <LockKeyhole size={18} className="text-accent" aria-hidden="true" />
           <input
@@ -62,7 +62,7 @@ function SubmitButton() {
       disabled={pending}
       className="min-h-12 bg-foreground px-5 text-sm font-semibold text-background transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? "Signing in..." : "Sign in"}
+      {pending ? "Γίνεται σύνδεση..." : "Σύνδεση"}
     </button>
   );
 }

@@ -11,9 +11,9 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
   if (!doctorProfile || !bookingSettings) {
     return (
       <section className="border border-line bg-surface p-6">
-        <h2 className="text-xl font-semibold">Missing seed data</h2>
+        <h2 className="text-xl font-semibold">Λείπουν αρχικά δεδομένα</h2>
         <p className="mt-3 text-sm leading-6 text-muted">
-          Run `supabase/seed.sql` in the Supabase SQL editor before editing settings.
+          Τρέξτε το `supabase/seed.sql` στο Supabase SQL editor πριν επεξεργαστείτε τις ρυθμίσεις.
         </p>
       </section>
     );
@@ -31,18 +31,18 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
 
       <section className="border border-line bg-surface p-6">
         <SectionHeader
-          title="Clinic Profile"
-          description="Core rebrandable details used across the website and emails."
+          title="Προφίλ κλινικής"
+          description="Βασικά rebrandable στοιχεία που χρησιμοποιούνται στην ιστοσελίδα και στα emails."
         />
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <TextField label="Doctor name" name="doctor_name" defaultValue={doctorProfile.doctor_name} />
-          <TextField label="Clinic name" name="clinic_name" defaultValue={doctorProfile.clinic_name} />
+          <TextField label="Όνομα γιατρού" name="doctor_name" defaultValue={doctorProfile.doctor_name} />
+          <TextField label="Όνομα κλινικής" name="clinic_name" defaultValue={doctorProfile.clinic_name} />
           <TextField label="Email" name="email" type="email" defaultValue={doctorProfile.email} />
-          <TextField label="Phone" name="phone" defaultValue={doctorProfile.phone} />
-          <TextField label="Address" name="address" defaultValue={doctorProfile.address} />
-          <TextField label="City" name="city" defaultValue={doctorProfile.city} />
+          <TextField label="Τηλέφωνο" name="phone" defaultValue={doctorProfile.phone} />
+          <TextField label="Διεύθυνση" name="address" defaultValue={doctorProfile.address} />
+          <TextField label="Πόλη" name="city" defaultValue={doctorProfile.city} />
           <TextField
-            label="Timezone"
+            label="Ζώνη ώρας"
             name="profile_timezone"
             defaultValue={doctorProfile.timezone}
           />
@@ -51,33 +51,33 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
 
       <section className="border border-line bg-surface p-6">
         <SectionHeader
-          title="Booking Rules"
-          description="Rules used by the availability engine before a patient can confirm a booking."
+          title="Κανόνες booking"
+          description="Κανόνες που χρησιμοποιεί το availability engine πριν επιβεβαιωθεί ένα ραντεβού."
         />
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <NumberField
-            label="Booking horizon"
+            label="Μέχρι πόσες μέρες μπροστά"
             name="booking_horizon_days"
             defaultValue={bookingSettings.booking_horizon_days}
             min={1}
-            suffix="days"
+            suffix="μέρες"
           />
           <NumberField
-            label="Buffer time"
+            label="Κενό ανάμεσα στα ραντεβού"
             name="buffer_minutes"
             defaultValue={bookingSettings.buffer_minutes}
             min={0}
-            suffix="minutes"
+            suffix="λεπτά"
           />
           <NumberField
-            label="Minimum notice"
+            label="Ελάχιστη προειδοποίηση"
             name="min_notice_hours"
             defaultValue={bookingSettings.min_notice_hours}
             min={0}
-            suffix="hours"
+            suffix="ώρες"
           />
           <TextField
-            label="Booking timezone"
+            label="Ζώνη ώρας booking"
             name="booking_timezone"
             defaultValue={bookingSettings.timezone}
           />
@@ -86,31 +86,31 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
 
       <section className="border border-line bg-surface p-6">
         <SectionHeader
-          title="Appointment Types"
-          description="Edit treatment names, duration, visibility, and ordering. The booking flow will use these options."
+          title="Τύποι ραντεβού"
+          description="Επεξεργασία ονομάτων θεραπείας, διάρκειας, ενεργής κατάστασης και σειράς εμφάνισης."
         />
         <div className="mt-6 grid gap-4">
           {appointmentTypes.map((type) => (
             <div key={type.id} className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px_120px_120px]">
               <TextField
-                label="Greek name"
+                label="Όνομα στα Ελληνικά"
                 name={`appointment_type_${type.id}_name_el`}
                 defaultValue={type.name_el}
               />
               <TextField
-                label="English name"
+                label="Όνομα στα Αγγλικά"
                 name={`appointment_type_${type.id}_name_en`}
                 defaultValue={type.name_en}
               />
               <NumberField
-                label="Duration"
+                label="Διάρκεια"
                 name={`appointment_type_${type.id}_duration_minutes`}
                 defaultValue={type.duration_minutes}
                 min={1}
                 suffix="min"
               />
               <NumberField
-                label="Order"
+                label="Σειρά"
                 name={`appointment_type_${type.id}_sort_order`}
                 defaultValue={type.sort_order}
                 min={0}
@@ -122,7 +122,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
                   defaultChecked={type.is_active}
                   className="h-5 w-5 accent-[var(--accent)]"
                 />
-                Active
+                Ενεργό
               </label>
             </div>
           ))}
@@ -135,7 +135,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           className="inline-flex min-h-12 w-full items-center justify-center gap-2 bg-foreground px-6 text-sm font-semibold text-background transition hover:bg-accent sm:w-auto"
         >
           <Save size={17} aria-hidden="true" />
-          Save Changes
+          Αποθήκευση αλλαγών
         </button>
       </div>
     </form>

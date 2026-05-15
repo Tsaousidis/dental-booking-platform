@@ -6,10 +6,10 @@ export default function AdminLoginPage() {
     <main className="grid min-h-screen bg-background px-5 py-12 text-foreground sm:px-8 lg:grid-cols-[1fr_0.9fr]">
       <section className="flex items-center justify-center">
         <div className="w-full max-w-md border border-line bg-surface p-6 sm:p-8">
-          <p className="text-sm uppercase tracking-[0.22em] text-accent">Doctor admin</p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight">Sign in</h1>
+          <p className="text-sm uppercase tracking-[0.22em] text-accent">Admin γιατρού</p>
+          <h1 className="mt-4 text-4xl font-semibold leading-tight">Σύνδεση</h1>
           <p className="mt-4 text-base leading-7 text-muted">
-            Access appointments, clinic settings, and insights for {brand.clinicName}.
+            Διαχείριση ραντεβού, ρυθμίσεων κλινικής και στατιστικών για το {brand.clinicName}.
           </p>
           <LoginForm />
         </div>
@@ -18,7 +18,7 @@ export default function AdminLoginPage() {
         <div className="max-w-sm bg-surface/90 p-6 backdrop-blur">
           <p className="text-sm font-semibold">{brand.clinicName}</p>
           <p className="mt-2 text-sm leading-6 text-muted">
-            A calm admin experience for a premium dental clinic.
+            Ένα ήρεμο περιβάλλον διαχείρισης για premium οδοντιατρική κλινική.
           </p>
         </div>
       </section>

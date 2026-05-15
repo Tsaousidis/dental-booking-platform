@@ -6,9 +6,9 @@ import { logout } from "@/app/admin/login/actions";
 import { brand } from "@/config/brand";
 
 const adminNav = [
-  { href: "/admin/appointments", label: "Appointments", icon: CalendarDays },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
-  { href: "/admin/insights", label: "Insights", icon: BarChart3 },
+  { href: "/admin/appointments", label: "Ραντεβού", icon: CalendarDays },
+  { href: "/admin/settings", label: "Ρυθμίσεις", icon: Settings },
+  { href: "/admin/insights", label: "Στατιστικά", icon: BarChart3 },
 ];
 
 export function AdminShell({
@@ -34,7 +34,7 @@ export function AdminShell({
               className="inline-flex min-h-10 items-center gap-2 border border-line px-4 text-sm font-medium transition hover:border-accent"
             >
               <LogOut size={16} aria-hidden="true" />
-              Sign out
+              Αποσύνδεση
             </button>
           </form>
         </div>

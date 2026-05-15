@@ -1,14 +1,14 @@
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
-const metrics = ["Total bookings", "This month", "Completed", "Cancelled", "No-show"];
+const metrics = ["Σύνολο bookings", "Αυτόν τον μήνα", "Ολοκληρωμένα", "Ακυρωμένα", "No-show"];
 
 export default function AdminInsightsPage() {
   return (
     <div className="grid gap-6">
       <AdminPageHeader
         eyebrow="Admin"
-        title="Insights"
-        description="Simple doctor-only metrics will summarize bookings, outcomes, busiest days, busiest hours, and service demand."
+        title="Στατιστικά"
+        description="Απλά στατιστικά μόνο για τον γιατρό: bookings, αποτελέσματα, πιο busy ημέρες, ώρες και ζήτηση υπηρεσιών."
       />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {metrics.map((metric) => (

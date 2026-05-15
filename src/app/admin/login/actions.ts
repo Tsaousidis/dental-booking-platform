@@ -12,7 +12,8 @@ export type LoginState = {
 export async function login(_state: LoginState, formData: FormData): Promise<LoginState> {
   if (!hasSupabaseBrowserEnv()) {
     return {
-      message: "Supabase environment variables are missing. Add them to .env.local first.",
+      message:
+        "Λείπουν οι μεταβλητές περιβάλλοντος του Supabase. Προσθέστε τις στο .env.local πρώτα.",
     };
   }
 
@@ -20,7 +21,7 @@ export async function login(_state: LoginState, formData: FormData): Promise<Log
   const password = String(formData.get("password") ?? "");
 
   if (!email || !password) {
-    return { message: "Email and password are required." };
+    return { message: "Το email και ο κωδικός είναι υποχρεωτικά." };
   }
 
   const supabase = await createClient();
@@ -30,7 +31,7 @@ export async function login(_state: LoginState, formData: FormData): Promise<Log
   });
 
   if (error) {
-    return { message: error.message };
+    return { message: "Η σύνδεση απέτυχε. Ελέγξτε τα στοιχεία σας." };
   }
 
   redirect("/admin/appointments");

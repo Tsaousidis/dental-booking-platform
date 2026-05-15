@@ -145,7 +145,7 @@ function getRequiredValue(formData: FormData, key: string) {
   const value = String(formData.get(key) ?? "").trim();
 
   if (!value) {
-    throw new Error(`${key} is required.`);
+    throw new Error(`Το πεδίο ${key} είναι υποχρεωτικό.`);
   }
 
   return value;
@@ -155,7 +155,7 @@ function getPositiveInteger(formData: FormData, key: string) {
   const value = Number(getRequiredValue(formData, key));
 
   if (!Number.isInteger(value) || value <= 0) {
-    throw new Error(`${key} must be a positive integer.`);
+    throw new Error(`Το πεδίο ${key} πρέπει να είναι θετικός ακέραιος.`);
   }
 
   return value;
@@ -165,7 +165,7 @@ function getNonNegativeInteger(formData: FormData, key: string) {
   const value = Number(getRequiredValue(formData, key));
 
   if (!Number.isInteger(value) || value < 0) {
-    throw new Error(`${key} must be zero or greater.`);
+    throw new Error(`Το πεδίο ${key} πρέπει να είναι μηδέν ή μεγαλύτερο.`);
   }
 
   return value;
