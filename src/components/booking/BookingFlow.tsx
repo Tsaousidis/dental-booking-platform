@@ -31,6 +31,9 @@ type BookingFlowCopy = {
   reviewTitle: string;
   confirm: string;
   backendPending: string;
+  bookingSuccess: string;
+  bookingError: string;
+  submitting: string;
   minutes: string;
 };
 
@@ -59,6 +62,9 @@ const copyByLocale: Record<Locale, BookingFlowCopy> = {
     reviewTitle: "Έλεγχος ραντεβού",
     confirm: "Επιβεβαίωση ραντεβού",
     backendPending: "Η τελική αποθήκευση θα συνδεθεί στο επόμενο βήμα.",
+    bookingSuccess: "Το ραντεβού επιβεβαιώθηκε.",
+    bookingError: "Δεν ήταν δυνατή η δημιουργία του ραντεβού. Δοκιμάστε άλλη ώρα.",
+    submitting: "Γίνεται επιβεβαίωση...",
     minutes: "λεπτά",
   },
   en: {
@@ -85,6 +91,9 @@ const copyByLocale: Record<Locale, BookingFlowCopy> = {
     reviewTitle: "Review appointment",
     confirm: "Confirm appointment",
     backendPending: "Final booking creation will be connected in the next step.",
+    bookingSuccess: "Your appointment has been confirmed.",
+    bookingError: "Could not create the appointment. Please try another time.",
+    submitting: "Confirming...",
     minutes: "minutes",
   },
 };
@@ -109,6 +118,9 @@ export function BookingFlow({
   const [patientEmail, setPatientEmail] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
   const [patientNote, setPatientNote] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [confirmedAppointmentId, setConfirmedAppointmentId] = useState("");
 
   const selectedType = useMemo(
     () => appointmentTypes.find((type) => type.id === selectedTypeId),
@@ -162,6 +174,41 @@ export function BookingFlow({
     if (activeStep === 2) return Boolean(selectedSlotStart);
     if (activeStep === 3) return Boolean(patientName && patientEmail && patientPhone);
     return false;
+  }
+
+  async function handleSubmitBooking() {
+    if (!selectedType || !selectedSlot || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError("");
+
+    const response = await fetch("/api/booking/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        appointmentTypeId: selectedType.id,
+        startAt: selectedSlot.startAt,
+        patientName,
+        patientEmail,
+        patientPhone,
+        patientNote,
+      }),
+    });
+
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      setSubmitError(payload?.error ?? copy.bookingError);
+      setIsSubmitting(false);
+      return;
+    }
+
+    setConfirmedAppointmentId(payload.appointment.id);
+    setIsSubmitting(false);
   }
 
   return (
@@ -253,6 +300,8 @@ export function BookingFlow({
               patientEmail={patientEmail}
               patientPhone={patientPhone}
               patientNote={patientNote}
+              confirmedAppointmentId={confirmedAppointmentId}
+              submitError={submitError}
             />
           ) : null}
 
@@ -277,10 +326,11 @@ export function BookingFlow({
             ) : (
               <button
                 type="button"
-                disabled
-                className="min-h-12 bg-foreground px-5 text-sm font-semibold text-background opacity-50"
+                disabled={Boolean(confirmedAppointmentId) || isSubmitting}
+                onClick={handleSubmitBooking}
+                className="min-h-12 bg-foreground px-5 text-sm font-semibold text-background transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {copy.confirm}
+                {isSubmitting ? copy.submitting : copy.confirm}
               </button>
             )}
           </div>
@@ -457,6 +507,8 @@ function StepConfirmation({
   patientEmail,
   patientPhone,
   patientNote,
+  confirmedAppointmentId,
+  submitError,
 }: {
   copy: BookingFlowCopy;
   locale: Locale;
@@ -466,6 +518,8 @@ function StepConfirmation({
   patientEmail: string;
   patientPhone: string;
   patientNote: string;
+  confirmedAppointmentId: string;
+  submitError: string;
 }) {
   return (
     <div>
@@ -479,9 +533,20 @@ function StepConfirmation({
         <ReviewRow label={copy.phone} value={patientPhone} />
         {patientNote ? <ReviewRow label={copy.note} value={patientNote} /> : null}
       </dl>
-      <p className="mt-6 border border-line bg-background p-4 text-sm text-muted">
-        {copy.backendPending}
-      </p>
+      {confirmedAppointmentId ? (
+        <p className="mt-6 border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
+          {copy.bookingSuccess}
+        </p>
+      ) : (
+        <p className="mt-6 border border-line bg-background p-4 text-sm text-muted">
+          {copy.backendPending}
+        </p>
+      )}
+      {submitError ? (
+        <p className="mt-3 border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+          {submitError}
+        </p>
+      ) : null}
     </div>
   );
 }
