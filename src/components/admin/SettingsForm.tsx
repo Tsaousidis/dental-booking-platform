@@ -1,23 +1,45 @@
+import { formatInTimeZone } from "date-fns-tz";
 import { Save } from "lucide-react";
 
 import {
   type AdminSettingsData,
+  type BlockedSlot,
   saveAdminSettings,
 } from "@/lib/admin/settings";
 
+const dayLabels = [
+  "Κυριακή",
+  "Δευτέρα",
+  "Τρίτη",
+  "Τετάρτη",
+  "Πέμπτη",
+  "Παρασκευή",
+  "Σάββατο",
+];
+
 export function SettingsForm({ data }: { data: AdminSettingsData }) {
-  const { doctorProfile, bookingSettings, appointmentTypes } = data;
+  const {
+    doctorProfile,
+    bookingSettings,
+    appointmentTypes,
+    doctorSchedule,
+    scheduleBreaks,
+    blockedSlots,
+  } = data;
 
   if (!doctorProfile || !bookingSettings) {
     return (
       <section className="border border-line bg-surface p-6">
         <h2 className="text-xl font-semibold">Λείπουν αρχικά δεδομένα</h2>
         <p className="mt-3 text-sm leading-6 text-muted">
-          Τρέξτε το `supabase/seed.sql` στο Supabase SQL editor πριν επεξεργαστείτε τις ρυθμίσεις.
+          Τρέξτε το `supabase/seed.sql` στο Supabase SQL editor πριν επεξεργαστείτε
+          τις ρυθμίσεις.
         </p>
       </section>
     );
   }
+
+  const timezone = bookingSettings.timezone || "Europe/Athens";
 
   return (
     <form action={saveAdminSettings} className="grid gap-6">
@@ -27,6 +49,21 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
         type="hidden"
         name="appointment_type_ids"
         value={appointmentTypes.map((type) => type.id).join(",")}
+      />
+      <input
+        type="hidden"
+        name="schedule_ids"
+        value={doctorSchedule.map((day) => day.id).join(",")}
+      />
+      <input
+        type="hidden"
+        name="break_ids"
+        value={scheduleBreaks.map((item) => item.id).join(",")}
+      />
+      <input
+        type="hidden"
+        name="blocked_slot_ids"
+        value={blockedSlots.map((item) => item.id).join(",")}
       />
 
       <section className="border border-line bg-surface p-6">
@@ -46,6 +83,85 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
             name="profile_timezone"
             defaultValue={doctorProfile.timezone}
           />
+        </div>
+      </section>
+
+      <section className="border border-line bg-surface p-6">
+        <SectionHeader
+          title="Εργάσιμες ώρες"
+          description="Ορίζει ποιες ημέρες δέχεται ραντεβού ο γιατρός και μέσα σε ποιο ωράριο."
+        />
+        <div className="mt-6 grid gap-3">
+          {doctorSchedule.map((day) => (
+            <div
+              key={day.id}
+              className="grid gap-4 border border-line bg-background p-4 md:grid-cols-[1fr_130px_130px_120px]"
+            >
+              <div>
+                <p className="text-sm font-semibold">{dayLabels[day.day_of_week]}</p>
+                <p className="mt-1 text-xs text-muted">Ημέρα εβδομαδιαίου προγράμματος</p>
+              </div>
+              <TimeField
+                label="Έναρξη"
+                name={`schedule_${day.id}_start_time`}
+                defaultValue={normalizeTime(day.start_time)}
+                required={false}
+              />
+              <TimeField
+                label="Λήξη"
+                name={`schedule_${day.id}_end_time`}
+                defaultValue={normalizeTime(day.end_time)}
+                required={false}
+              />
+              <label className="flex items-end gap-3 pb-3 text-sm font-medium">
+                <input
+                  type="checkbox"
+                  name={`schedule_${day.id}_is_working`}
+                  defaultChecked={day.is_working}
+                  className="h-5 w-5 accent-[var(--accent)]"
+                />
+                Εργάσιμη
+              </label>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="border border-line bg-surface p-6">
+        <SectionHeader
+          title="Διαλείμματα"
+          description="Αφαιρούνται από τη διαθεσιμότητα χωρίς να δημιουργούνται fake ραντεβού."
+        />
+        <div className="mt-6 grid gap-3">
+          {scheduleBreaks.map((item) => (
+            <div
+              key={item.id}
+              className="grid gap-4 border border-line bg-background p-4 md:grid-cols-[1fr_130px_130px_120px]"
+            >
+              <SelectField
+                label="Ημέρα"
+                name={`break_${item.id}_day_of_week`}
+                defaultValue={String(item.day_of_week)}
+              />
+              <TimeField
+                label="Έναρξη"
+                name={`break_${item.id}_start_time`}
+                defaultValue={normalizeTime(item.start_time)}
+              />
+              <TimeField
+                label="Λήξη"
+                name={`break_${item.id}_end_time`}
+                defaultValue={normalizeTime(item.end_time)}
+              />
+              <DeleteCheckbox name={`break_${item.id}_delete`} />
+            </div>
+          ))}
+          <div className="grid gap-4 border border-dashed border-line bg-background p-4 md:grid-cols-[1fr_130px_130px_120px]">
+            <SelectField label="Νέο διάλειμμα" name="new_break_day_of_week" />
+            <TimeField label="Έναρξη" name="new_break_start_time" required={false} />
+            <TimeField label="Λήξη" name="new_break_end_time" required={false} />
+            <p className="flex items-end pb-3 text-sm text-muted">Προσθήκη με αποθήκευση</p>
+          </div>
         </div>
       </section>
 
@@ -86,12 +202,33 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
 
       <section className="border border-line bg-surface p-6">
         <SectionHeader
+          title="Blocked slots"
+          description="Χειροκίνητο μπλοκάρισμα συγκεκριμένης ώρας ή ημέρας, χωρίς fake appointments."
+        />
+        <div className="mt-6 grid gap-3">
+          {blockedSlots.map((slot) => (
+            <BlockedSlotRow key={slot.id} slot={slot} timezone={timezone} />
+          ))}
+          <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[190px_190px_1fr_120px]">
+            <DateTimeField label="Νέο block από" name="new_blocked_start_at" required={false} />
+            <DateTimeField label="Νέο block έως" name="new_blocked_end_at" required={false} />
+            <TextField label="Αιτία" name="new_blocked_reason" defaultValue="" required={false} />
+            <p className="flex items-end pb-3 text-sm text-muted">Προσθήκη με αποθήκευση</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="border border-line bg-surface p-6">
+        <SectionHeader
           title="Τύποι ραντεβού"
           description="Επεξεργασία ονομάτων θεραπείας, διάρκειας, ενεργής κατάστασης και σειράς εμφάνισης."
         />
         <div className="mt-6 grid gap-4">
           {appointmentTypes.map((type) => (
-            <div key={type.id} className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px_120px_120px]">
+            <div
+              key={type.id}
+              className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px_120px_120px]"
+            >
               <TextField
                 label="Όνομα στα Ελληνικά"
                 name={`appointment_type_${type.id}_name_el`}
@@ -142,6 +279,36 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
   );
 }
 
+function BlockedSlotRow({
+  slot,
+  timezone,
+}: {
+  slot: BlockedSlot;
+  timezone: string;
+}) {
+  return (
+    <div className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[190px_190px_1fr_120px]">
+      <DateTimeField
+        label="Από"
+        name={`blocked_${slot.id}_start_at`}
+        defaultValue={formatDateTime(slot.start_at, timezone)}
+      />
+      <DateTimeField
+        label="Έως"
+        name={`blocked_${slot.id}_end_at`}
+        defaultValue={formatDateTime(slot.end_at, timezone)}
+      />
+      <TextField
+        label="Αιτία"
+        name={`blocked_${slot.id}_reason`}
+        defaultValue={slot.reason ?? ""}
+        required={false}
+      />
+      <DeleteCheckbox name={`blocked_${slot.id}_delete`} />
+    </div>
+  );
+}
+
 function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
     <div>
@@ -156,11 +323,13 @@ function TextField({
   name,
   defaultValue,
   type = "text",
+  required = true,
 }: {
   label: string;
   name: string;
   defaultValue: string;
   type?: string;
+  required?: boolean;
 }) {
   return (
     <label className="grid gap-2 text-sm font-medium">
@@ -169,7 +338,7 @@ function TextField({
         name={name}
         type={type}
         defaultValue={defaultValue}
-        required
+        required={required}
         className="min-h-11 border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
       />
     </label>
@@ -205,4 +374,99 @@ function NumberField({
       </span>
     </label>
   );
+}
+
+function TimeField({
+  label,
+  name,
+  defaultValue = "",
+  required = true,
+}: {
+  label: string;
+  name: string;
+  defaultValue?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="grid gap-2 text-sm font-medium">
+      {label}
+      <input
+        name={name}
+        type="time"
+        defaultValue={defaultValue}
+        required={required}
+        className="min-h-11 border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+      />
+    </label>
+  );
+}
+
+function DateTimeField({
+  label,
+  name,
+  defaultValue = "",
+  required = true,
+}: {
+  label: string;
+  name: string;
+  defaultValue?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="grid gap-2 text-sm font-medium">
+      {label}
+      <input
+        name={name}
+        type="datetime-local"
+        defaultValue={defaultValue}
+        required={required}
+        className="min-h-11 border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+      />
+    </label>
+  );
+}
+
+function SelectField({
+  label,
+  name,
+  defaultValue = "",
+}: {
+  label: string;
+  name: string;
+  defaultValue?: string;
+}) {
+  return (
+    <label className="grid gap-2 text-sm font-medium">
+      {label}
+      <select
+        name={name}
+        defaultValue={defaultValue}
+        className="min-h-11 border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+      >
+        <option value="">Επιλογή</option>
+        {dayLabels.map((label, index) => (
+          <option key={label} value={index}>
+            {label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function DeleteCheckbox({ name }: { name: string }) {
+  return (
+    <label className="flex items-end gap-3 pb-3 text-sm font-medium text-red-700">
+      <input type="checkbox" name={name} className="h-5 w-5 accent-red-700" />
+      Διαγραφή
+    </label>
+  );
+}
+
+function normalizeTime(value: string | null) {
+  return value ? value.slice(0, 5) : "";
+}
+
+function formatDateTime(value: string, timezone: string) {
+  return formatInTimeZone(value, timezone, "yyyy-MM-dd'T'HH:mm");
 }

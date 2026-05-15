@@ -1,8 +1,11 @@
 import "server-only";
 
+import { fromZonedTime } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+
+const DEFAULT_TIMEZONE = "Europe/Athens";
 
 export type DoctorProfile = {
   id: string;
@@ -32,41 +35,83 @@ export type AppointmentType = {
   sort_order: number;
 };
 
+export type DoctorSchedule = {
+  id: string;
+  day_of_week: number;
+  is_working: boolean;
+  start_time: string | null;
+  end_time: string | null;
+};
+
+export type ScheduleBreak = {
+  id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+};
+
+export type BlockedSlot = {
+  id: string;
+  start_at: string;
+  end_at: string;
+  reason: string | null;
+};
+
 export type AdminSettingsData = {
   doctorProfile: DoctorProfile | null;
   bookingSettings: BookingSettings | null;
   appointmentTypes: AppointmentType[];
+  doctorSchedule: DoctorSchedule[];
+  scheduleBreaks: ScheduleBreak[];
+  blockedSlots: BlockedSlot[];
 };
 
 export async function getAdminSettings(): Promise<AdminSettingsData> {
   const supabase = await createClient();
 
-  const [doctorProfileResult, bookingSettingsResult, appointmentTypesResult] =
-    await Promise.all([
-      supabase.from("doctor_profile").select("*").order("created_at").limit(1).maybeSingle(),
-      supabase.from("booking_settings").select("*").order("created_at").limit(1).maybeSingle(),
-      supabase
-        .from("appointment_types")
-        .select("*")
-        .order("sort_order", { ascending: true }),
-    ]);
+  const [
+    doctorProfileResult,
+    bookingSettingsResult,
+    appointmentTypesResult,
+    doctorScheduleResult,
+    scheduleBreaksResult,
+    blockedSlotsResult,
+  ] = await Promise.all([
+    supabase.from("doctor_profile").select("*").order("created_at").limit(1).maybeSingle(),
+    supabase.from("booking_settings").select("*").order("created_at").limit(1).maybeSingle(),
+    supabase
+      .from("appointment_types")
+      .select("*")
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("doctor_schedule")
+      .select("*")
+      .order("day_of_week", { ascending: true }),
+    supabase
+      .from("schedule_breaks")
+      .select("*")
+      .order("day_of_week", { ascending: true })
+      .order("start_time", { ascending: true }),
+    supabase
+      .from("blocked_slots")
+      .select("*")
+      .order("start_at", { ascending: true }),
+  ]);
 
-  if (doctorProfileResult.error) {
-    throw new Error(doctorProfileResult.error.message);
-  }
-
-  if (bookingSettingsResult.error) {
-    throw new Error(bookingSettingsResult.error.message);
-  }
-
-  if (appointmentTypesResult.error) {
-    throw new Error(appointmentTypesResult.error.message);
-  }
+  throwIfSupabaseError(doctorProfileResult.error);
+  throwIfSupabaseError(bookingSettingsResult.error);
+  throwIfSupabaseError(appointmentTypesResult.error);
+  throwIfSupabaseError(doctorScheduleResult.error);
+  throwIfSupabaseError(scheduleBreaksResult.error);
+  throwIfSupabaseError(blockedSlotsResult.error);
 
   return {
     doctorProfile: doctorProfileResult.data,
     bookingSettings: bookingSettingsResult.data,
     appointmentTypes: appointmentTypesResult.data ?? [],
+    doctorSchedule: doctorScheduleResult.data ?? [],
+    scheduleBreaks: scheduleBreaksResult.data ?? [],
+    blockedSlots: blockedSlotsResult.data ?? [],
   };
 }
 
@@ -77,9 +122,10 @@ export async function saveAdminSettings(formData: FormData) {
 
   const doctorProfileId = getRequiredValue(formData, "doctor_profile_id");
   const bookingSettingsId = getRequiredValue(formData, "booking_settings_id");
-  const appointmentTypeIds = getRequiredValue(formData, "appointment_type_ids")
-    .split(",")
-    .filter(Boolean);
+  const appointmentTypeIds = getCsvIds(formData, "appointment_type_ids");
+  const scheduleIds = getCsvIds(formData, "schedule_ids");
+  const breakIds = getCsvIds(formData, "break_ids");
+  const blockedSlotIds = getCsvIds(formData, "blocked_slot_ids");
 
   const doctorProfile = {
     doctor_name: getRequiredValue(formData, "doctor_name"),
@@ -98,57 +144,181 @@ export async function saveAdminSettings(formData: FormData) {
     timezone: getRequiredValue(formData, "booking_timezone"),
   };
 
+  const timezone = bookingSettings.timezone || DEFAULT_TIMEZONE;
+
   const { error: doctorProfileError } = await supabase
     .from("doctor_profile")
     .update(doctorProfile)
     .eq("id", doctorProfileId);
-
-  if (doctorProfileError) {
-    throw new Error(doctorProfileError.message);
-  }
+  throwIfSupabaseError(doctorProfileError);
 
   const { error: bookingSettingsError } = await supabase
     .from("booking_settings")
     .update(bookingSettings)
     .eq("id", bookingSettingsId);
+  throwIfSupabaseError(bookingSettingsError);
 
-  if (bookingSettingsError) {
-    throw new Error(bookingSettingsError.message);
-  }
+  await Promise.all([
+    ...appointmentTypeIds.map((id) => updateAppointmentType(formData, id)),
+    ...scheduleIds.map((id) => updateDoctorSchedule(formData, id)),
+    ...breakIds.map((id) => updateScheduleBreak(formData, id)),
+    ...blockedSlotIds.map((id) => updateBlockedSlot(formData, id, timezone)),
+  ]);
 
-  await Promise.all(
-    appointmentTypeIds.map(async (id) => {
-      const { error } = await supabase
-        .from("appointment_types")
-        .update({
-          name_el: getRequiredValue(formData, `appointment_type_${id}_name_el`),
-          name_en: getRequiredValue(formData, `appointment_type_${id}_name_en`),
-          duration_minutes: getPositiveInteger(
-            formData,
-            `appointment_type_${id}_duration_minutes`,
-          ),
-          sort_order: getNonNegativeInteger(formData, `appointment_type_${id}_sort_order`),
-          is_active: formData.get(`appointment_type_${id}_is_active`) === "on",
-        })
-        .eq("id", id);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-    }),
-  );
+  await createNewScheduleBreak(formData);
+  await createNewBlockedSlot(formData, timezone);
 
   revalidatePath("/admin/settings");
 }
 
+async function updateAppointmentType(formData: FormData, id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("appointment_types")
+    .update({
+      name_el: getRequiredValue(formData, `appointment_type_${id}_name_el`),
+      name_en: getRequiredValue(formData, `appointment_type_${id}_name_en`),
+      duration_minutes: getPositiveInteger(
+        formData,
+        `appointment_type_${id}_duration_minutes`,
+      ),
+      sort_order: getNonNegativeInteger(formData, `appointment_type_${id}_sort_order`),
+      is_active: formData.get(`appointment_type_${id}_is_active`) === "on",
+    })
+    .eq("id", id);
+
+  throwIfSupabaseError(error);
+}
+
+async function updateDoctorSchedule(formData: FormData, id: string) {
+  const supabase = await createClient();
+  const isWorking = formData.get(`schedule_${id}_is_working`) === "on";
+  const startTime = getOptionalValue(formData, `schedule_${id}_start_time`);
+  const endTime = getOptionalValue(formData, `schedule_${id}_end_time`);
+
+  if (isWorking && (!startTime || !endTime)) {
+    throw new Error("Οι εργάσιμες ημέρες χρειάζονται ώρα έναρξης και λήξης.");
+  }
+
+  const { error } = await supabase
+    .from("doctor_schedule")
+    .update({
+      is_working: isWorking,
+      start_time: isWorking ? startTime : null,
+      end_time: isWorking ? endTime : null,
+    })
+    .eq("id", id);
+
+  throwIfSupabaseError(error);
+}
+
+async function updateScheduleBreak(formData: FormData, id: string) {
+  const supabase = await createClient();
+
+  if (formData.get(`break_${id}_delete`) === "on") {
+    const { error } = await supabase.from("schedule_breaks").delete().eq("id", id);
+    throwIfSupabaseError(error);
+    return;
+  }
+
+  const { error } = await supabase
+    .from("schedule_breaks")
+    .update({
+      day_of_week: getNonNegativeInteger(formData, `break_${id}_day_of_week`),
+      start_time: getRequiredValue(formData, `break_${id}_start_time`),
+      end_time: getRequiredValue(formData, `break_${id}_end_time`),
+    })
+    .eq("id", id);
+
+  throwIfSupabaseError(error);
+}
+
+async function createNewScheduleBreak(formData: FormData) {
+  const day = getOptionalValue(formData, "new_break_day_of_week");
+  const startTime = getOptionalValue(formData, "new_break_start_time");
+  const endTime = getOptionalValue(formData, "new_break_end_time");
+
+  if (!day && !startTime && !endTime) {
+    return;
+  }
+
+  if (!day || !startTime || !endTime) {
+    throw new Error("Για νέο διάλειμμα συμπληρώστε ημέρα, έναρξη και λήξη.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("schedule_breaks").insert({
+    day_of_week: Number(day),
+    start_time: startTime,
+    end_time: endTime,
+  });
+
+  throwIfSupabaseError(error);
+}
+
+async function updateBlockedSlot(formData: FormData, id: string, timezone: string) {
+  const supabase = await createClient();
+
+  if (formData.get(`blocked_${id}_delete`) === "on") {
+    const { error } = await supabase.from("blocked_slots").delete().eq("id", id);
+    throwIfSupabaseError(error);
+    return;
+  }
+
+  const { error } = await supabase
+    .from("blocked_slots")
+    .update({
+      start_at: toUtcIso(getRequiredValue(formData, `blocked_${id}_start_at`), timezone),
+      end_at: toUtcIso(getRequiredValue(formData, `blocked_${id}_end_at`), timezone),
+      reason: getOptionalValue(formData, `blocked_${id}_reason`),
+    })
+    .eq("id", id);
+
+  throwIfSupabaseError(error);
+}
+
+async function createNewBlockedSlot(formData: FormData, timezone: string) {
+  const startAt = getOptionalValue(formData, "new_blocked_start_at");
+  const endAt = getOptionalValue(formData, "new_blocked_end_at");
+  const reason = getOptionalValue(formData, "new_blocked_reason");
+
+  if (!startAt && !endAt && !reason) {
+    return;
+  }
+
+  if (!startAt || !endAt) {
+    throw new Error("Για νέο block συμπληρώστε έναρξη και λήξη.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("blocked_slots").insert({
+    start_at: toUtcIso(startAt, timezone),
+    end_at: toUtcIso(endAt, timezone),
+    reason,
+  });
+
+  throwIfSupabaseError(error);
+}
+
+function getCsvIds(formData: FormData, key: string) {
+  return String(formData.get(key) ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
 function getRequiredValue(formData: FormData, key: string) {
-  const value = String(formData.get(key) ?? "").trim();
+  const value = getOptionalValue(formData, key);
 
   if (!value) {
     throw new Error(`Το πεδίο ${key} είναι υποχρεωτικό.`);
   }
 
   return value;
+}
+
+function getOptionalValue(formData: FormData, key: string) {
+  return String(formData.get(key) ?? "").trim();
 }
 
 function getPositiveInteger(formData: FormData, key: string) {
@@ -169,4 +339,14 @@ function getNonNegativeInteger(formData: FormData, key: string) {
   }
 
   return value;
+}
+
+function toUtcIso(value: string, timezone: string) {
+  return fromZonedTime(value, timezone).toISOString();
+}
+
+function throwIfSupabaseError(error: { message: string } | null) {
+  if (error) {
+    throw new Error(error.message);
+  }
 }
