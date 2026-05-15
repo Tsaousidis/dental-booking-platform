@@ -4,11 +4,39 @@
     "about": "Doctor",
     "services": "Services",
     "booking": "Booking",
-    "contact": "Contact"
+    "contact": "Contact",
+    "book": "Book appointment"
   },
   "home": {
-    "heroTitle": "Premium dental care in Athens",
-    "heroSubtitle": "A calm, modern care experience with instant online booking.",
-    "bookButton": "Book appointment"
+    "heroEyebrow": "Private dental clinic in Athens",
+    "heroTitle": "Premium dental care with calm, clinical precision.",
+    "heroSubtitle": "Cosmetic dentistry, implants, and everyday care in a modern setting, with instant online booking and a personal approach.",
+    "bookButton": "Book appointment",
+    "secondaryButton": "View services",
+    "doctorEyebrow": "The doctor",
+    "doctorTitle": "Dr. Eleni Markou combines aesthetic detail with calm, human care.",
+    "doctorBody": "The clinic philosophy is built around clear explanations, modern protocols, and treatment plans that respect each patient's time and comfort.",
+    "servicesEyebrow": "Services",
+    "servicesTitle": "Treatments designed for health, function, and a natural result.",
+    "reviewsEyebrow": "Patient experience",
+    "reviewsTitle": "Calm care, clear communication, and results that feel natural.",
+    "ctaTitle": "Ready to schedule your visit?",
+    "ctaBody": "Choose a treatment, day, and time through a simple mobile-first flow."
+  },
+  "services": {
+    "implants": "Implants",
+    "whitening": "Whitening",
+    "veneers": "Veneers",
+    "invisalign": "Invisalign",
+    "cleaning": "Cleaning"
+  },
+  "reviews": {
+    "first": "An exceptionally calm experience, with clear explanations at every step.",
+    "second": "The space feels clean and luxurious without becoming cold.",
+    "third": "Online booking was quick and the appointment started exactly on time."
+  },
+  "footer": {
+    "tagline": "Premium dental care in Athens.",
+    "legal": "Legal"
   }
 }
