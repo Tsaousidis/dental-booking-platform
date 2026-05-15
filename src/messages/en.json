@@ -23,6 +23,66 @@
     "ctaTitle": "Ready to schedule your visit?",
     "ctaBody": "Choose a treatment, day, and time through a simple mobile-first flow."
   },
+  "aboutPage": {
+    "eyebrow": "About the doctor",
+    "title": "A calm clinical approach, shaped around trust and long-term oral health.",
+    "intro": "Dr. Eleni Markou is a fictional premium clinic profile for this rebrandable dental platform. The page is designed to be replaced with the real doctor's biography, credentials, and philosophy for each deployment.",
+    "credentialOne": "Advanced cosmetic dentistry focus",
+    "credentialTwo": "Implant and restorative treatment planning",
+    "credentialThree": "Clear patient communication and prevention-first care",
+    "philosophyTitle": "Philosophy",
+    "philosophyBody": "Every treatment begins with clarity: what is needed, why it matters, and what the patient can expect. The clinic experience is intentionally quiet, precise, and respectful of personal comfort.",
+    "careTitle": "Care standards",
+    "careBody": "Modern materials, careful planning, and a refined appointment experience create a clinic model that feels premium without becoming intimidating."
+  },
+  "servicesPage": {
+    "eyebrow": "Treatments",
+    "title": "Dental services built for local SEO and patient clarity.",
+    "intro": "Each treatment can become its own optimized service page later. For the MVP, this page gives patients a clear overview and routes them toward booking.",
+    "book": "Book this treatment",
+    "items": {
+      "implants": {
+        "title": "Dental Implants",
+        "body": "Restorative treatment planning for missing teeth, with a focus on function, comfort, and natural-looking results."
+      },
+      "whitening": {
+        "title": "Teeth Whitening",
+        "body": "Professional whitening options designed to brighten the smile safely and predictably."
+      },
+      "veneers": {
+        "title": "Porcelain Veneers",
+        "body": "Aesthetic smile design for shape, symmetry, and color improvements with a refined finish."
+      },
+      "invisalign": {
+        "title": "Invisalign",
+        "body": "Clear aligner treatment for discreet orthodontic correction and improved bite alignment."
+      },
+      "cleaning": {
+        "title": "Dental Cleaning",
+        "body": "Preventive hygiene appointments to support gum health and long-term maintenance."
+      }
+    }
+  },
+  "contactPage": {
+    "eyebrow": "Contact",
+    "title": "Visit a premium dental studio in the heart of Athens.",
+    "intro": "Use the details below as placeholder clinic information until a real dentist profile is connected.",
+    "hoursTitle": "Clinic hours",
+    "weekdays": "Monday to Friday",
+    "weekdayHours": "09:00 - 17:00",
+    "saturday": "Saturday",
+    "saturdayHours": "By appointment",
+    "mapTitle": "Map placeholder",
+    "mapBody": "A real embedded map will be connected once the clinic address is final."
+  },
+  "legalPages": {
+    "privacyTitle": "Privacy Policy",
+    "cookiesTitle": "Cookie Policy",
+    "eyebrow": "Legal placeholder",
+    "notice": "This text is a placeholder and must be reviewed by a qualified legal professional before production use.",
+    "privacyBody": "This website will collect the minimum information needed to manage appointment requests, clinic communication, and secure administration. Patient account creation is not part of the initial system.",
+    "cookiesBody": "The first version uses only essential cookies required for security, admin authentication, and basic site operation. Analytics or marketing cookies should be added only after consent logic is finalized."
+  },
   "services": {
     "implants": "Implants",
     "whitening": "Whitening",

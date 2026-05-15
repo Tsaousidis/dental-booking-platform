@@ -1,3 +1,23 @@
-export default function AboutPage() {
-  return <div className="p-8">About doctor page foundation</div>;
+import { AboutContent } from "@/components/public/AboutContent";
+import { PublicPageShell } from "@/components/public/PublicPageShell";
+import { type Locale } from "@/config/locales";
+import { getDictionary } from "@/lib/i18n";
+
+export default async function AboutPage({
+  params,
+}: Readonly<{
+  params: Promise<{ locale: Locale }>;
+}>) {
+  const { locale } = await params;
+  const dictionary = await getDictionary(locale);
+
+  return (
+    <PublicPageShell
+      eyebrow={dictionary.aboutPage.eyebrow}
+      title={dictionary.aboutPage.title}
+      intro={dictionary.aboutPage.intro}
+    >
+      <AboutContent dictionary={dictionary} />
+    </PublicPageShell>
+  );
 }
