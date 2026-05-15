@@ -36,3 +36,10 @@ Phase 1 foundation is in place:
 - Supabase helper scaffolding
 - Protected admin route scaffolding
 - Public/admin route placeholders
+
+## Database
+
+Supabase schema files live in `supabase/`.
+
+- `supabase/migrations/202605160001_initial_schema.sql`
+- `supabase/seed.sql`
