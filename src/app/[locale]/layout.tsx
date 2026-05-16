@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { CookieBanner } from "@/components/layout/CookieBanner";
 import { StickyMobileBookingCTA } from "@/components/layout/StickyMobileBookingCTA";
 import { StructuredData } from "@/components/public/StructuredData";
 import { isLocale, locales, type Locale } from "@/config/locales";
@@ -34,6 +35,7 @@ export default async function LocaleLayout({
       <StructuredData />
       <PublicFooter locale={activeLocale} dictionary={dictionary} />
       <StickyMobileBookingCTA locale={activeLocale} dictionary={dictionary} />
+      <CookieBanner dictionary={dictionary} />
     </div>
   );
 }

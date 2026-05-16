@@ -98,5 +98,15 @@
   "footer": {
     "tagline": "Premium dental care in Athens.",
     "legal": "Legal"
+  },
+  "cookieBanner": {
+    "title": "Cookie settings",
+    "body": "We only use essential cookies for security, admin sign-in, and basic site functionality.",
+    "essentialTitle": "Essential cookies",
+    "essentialBody": "Always active. Required for the platform to work correctly.",
+    "accept": "Accept",
+    "reject": "Reject",
+    "manage": "Manage",
+    "save": "Save"
   }
 }
