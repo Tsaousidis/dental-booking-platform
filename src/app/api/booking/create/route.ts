@@ -8,6 +8,7 @@ import {
 } from "@/lib/emails/booking-emails";
 import { createCalendarEvent } from "@/lib/google-calendar/events";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { verifyTurnstileToken } from "@/lib/validation/turnstile";
 import { site } from "@/config/site";
 
 const createBookingSchema = z.object({
@@ -18,6 +19,7 @@ const createBookingSchema = z.object({
   patientEmail: z.string().trim().email().max(180),
   patientPhone: z.string().trim().min(6).max(40),
   patientNote: z.string().trim().max(1000).optional().default(""),
+  captchaToken: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -32,6 +34,18 @@ export async function POST(request: Request) {
   }
 
   const input = result.data;
+  const captcha = await verifyTurnstileToken(
+    input.captchaToken,
+    request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for"),
+  );
+
+  if (!captcha.ok) {
+    return NextResponse.json(
+      { error: "Captcha verification failed." },
+      { status: 400 },
+    );
+  }
+
   const availableDays = await getAvailabilityForAppointmentType(input.appointmentTypeId);
   const selectedSlot = availableDays
     .flatMap((day) => day.slots)

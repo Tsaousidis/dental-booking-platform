@@ -7,6 +7,8 @@ import { type Locale } from "@/config/locales";
 import { type AvailableDay, type AvailableSlot } from "@/lib/booking/availability";
 import { type PublicAppointmentType } from "@/lib/booking/appointment-types";
 
+import { TurnstileWidget } from "./TurnstileWidget";
+
 type BookingFlowCopy = {
   title: string;
   intro: string;
@@ -33,9 +35,12 @@ type BookingFlowCopy = {
   backendPending: string;
   bookingSuccess: string;
   bookingError: string;
+  captchaError: string;
   submitting: string;
   minutes: string;
 };
+
+const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 const copyByLocale: Record<Locale, BookingFlowCopy> = {
   el: {
@@ -61,9 +66,10 @@ const copyByLocale: Record<Locale, BookingFlowCopy> = {
     noSlots: "Δεν υπάρχουν διαθέσιμες ώρες για αυτή τη θεραπεία.",
     reviewTitle: "Έλεγχος ραντεβού",
     confirm: "Επιβεβαίωση ραντεβού",
-    backendPending: "Η τελική αποθήκευση θα συνδεθεί στο επόμενο βήμα.",
+    backendPending: "Ελέγξτε τα στοιχεία σας και επιβεβαιώστε το ραντεβού.",
     bookingSuccess: "Το ραντεβού επιβεβαιώθηκε.",
     bookingError: "Δεν ήταν δυνατή η δημιουργία του ραντεβού. Δοκιμάστε άλλη ώρα.",
+    captchaError: "Ο έλεγχος ασφαλείας δεν ολοκληρώθηκε.",
     submitting: "Γίνεται επιβεβαίωση...",
     minutes: "λεπτά",
   },
@@ -90,9 +96,10 @@ const copyByLocale: Record<Locale, BookingFlowCopy> = {
     noSlots: "There are no available times for this treatment.",
     reviewTitle: "Review appointment",
     confirm: "Confirm appointment",
-    backendPending: "Final booking creation will be connected in the next step.",
+    backendPending: "Review your details and confirm the appointment.",
     bookingSuccess: "Your appointment has been confirmed.",
     bookingError: "Could not create the appointment. Please try another time.",
+    captchaError: "The security check was not completed.",
     submitting: "Confirming...",
     minutes: "minutes",
   },
@@ -121,6 +128,7 @@ export function BookingFlow({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [confirmedAppointmentId, setConfirmedAppointmentId] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
 
   const selectedType = useMemo(
     () => appointmentTypes.find((type) => type.id === selectedTypeId),
@@ -184,6 +192,12 @@ export function BookingFlow({
     setIsSubmitting(true);
     setSubmitError("");
 
+    if (turnstileSiteKey && !captchaToken) {
+      setSubmitError(copy.captchaError);
+      setIsSubmitting(false);
+      return;
+    }
+
     const response = await fetch("/api/booking/create", {
       method: "POST",
       headers: {
@@ -197,6 +211,7 @@ export function BookingFlow({
         patientEmail,
         patientPhone,
         patientNote,
+        captchaToken,
       }),
     });
 
@@ -303,6 +318,9 @@ export function BookingFlow({
               patientNote={patientNote}
               confirmedAppointmentId={confirmedAppointmentId}
               submitError={submitError}
+              captchaToken={captchaToken}
+              onCaptchaVerify={setCaptchaToken}
+              onCaptchaExpire={() => setCaptchaToken("")}
             />
           ) : null}
 
@@ -510,6 +528,9 @@ function StepConfirmation({
   patientNote,
   confirmedAppointmentId,
   submitError,
+  captchaToken,
+  onCaptchaVerify,
+  onCaptchaExpire,
 }: {
   copy: BookingFlowCopy;
   locale: Locale;
@@ -521,6 +542,9 @@ function StepConfirmation({
   patientNote: string;
   confirmedAppointmentId: string;
   submitError: string;
+  captchaToken: string;
+  onCaptchaVerify: (token: string) => void;
+  onCaptchaExpire: () => void;
 }) {
   return (
     <div>
@@ -539,9 +563,19 @@ function StepConfirmation({
           {copy.bookingSuccess}
         </p>
       ) : (
-        <p className="mt-6 border border-line bg-background p-4 text-sm text-muted">
-          {copy.backendPending}
-        </p>
+        <div className="mt-6 grid gap-4">
+          {turnstileSiteKey ? (
+            <TurnstileWidget
+              siteKey={turnstileSiteKey}
+              onVerify={onCaptchaVerify}
+              onExpire={onCaptchaExpire}
+            />
+          ) : null}
+          <p className="border border-line bg-background p-4 text-sm text-muted">
+            {copy.backendPending}
+            {turnstileSiteKey && !captchaToken ? ` ${copy.captchaError}` : ""}
+          </p>
+        </div>
       )}
       {submitError ? (
         <p className="mt-3 border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
