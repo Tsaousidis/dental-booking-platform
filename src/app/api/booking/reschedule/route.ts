@@ -1,0 +1,157 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
+import { getAvailabilityForAppointmentType } from "@/lib/booking/availability-data";
+import {
+  sendDoctorRescheduleNotification,
+  sendPatientRescheduleConfirmation,
+} from "@/lib/emails/booking-emails";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+const schema = z.object({
+  token: z.string().trim().min(32),
+  locale: z.enum(["el", "en"]).default("el"),
+  startAt: z.string().datetime(),
+});
+
+type AppointmentRow = {
+  id: string;
+  appointment_type_id: string | null;
+  patient_name: string;
+  patient_email: string;
+  patient_phone: string;
+  patient_note: string | null;
+  start_at: string;
+  end_at: string;
+  status: "confirmed" | "completed" | "cancelled" | "no_show";
+  appointment_types:
+    | {
+        name_el: string;
+        name_en: string;
+      }
+    | Array<{
+        name_el: string;
+        name_en: string;
+      }>
+    | null;
+};
+
+export async function POST(request: Request) {
+  const json = await request.json().catch(() => null);
+  const result = schema.safeParse(json);
+
+  if (!result.success) {
+    return NextResponse.json({ error: "Invalid reschedule details." }, { status: 400 });
+  }
+
+  const { token, locale, startAt } = result.data;
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("appointments")
+    .select(
+      "id,appointment_type_id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,status,appointment_types(name_el,name_en)",
+    )
+    .eq("reschedule_token", token)
+    .maybeSingle();
+
+  if (error || !data) {
+    return NextResponse.json({ error: "Appointment not found." }, { status: 404 });
+  }
+
+  const appointment = data as unknown as AppointmentRow;
+
+  if (appointment.status !== "confirmed" || !appointment.appointment_type_id) {
+    return NextResponse.json(
+      { error: "This appointment can no longer be rescheduled online." },
+      { status: 409 },
+    );
+  }
+
+  const days = await getAvailabilityForAppointmentType(appointment.appointment_type_id, {
+    excludeAppointmentId: appointment.id,
+  });
+  const selectedSlot = days.flatMap((day) => day.slots).find((slot) => slot.startAt === startAt);
+
+  if (!selectedSlot) {
+    return NextResponse.json(
+      { error: "This appointment time is no longer available." },
+      { status: 409 },
+    );
+  }
+
+  const previousStartAt = appointment.start_at;
+  const previousEndAt = appointment.end_at;
+  const { data: updatedAppointment, error: updateError } = await supabase
+    .from("appointments")
+    .update({
+      start_at: selectedSlot.startAt,
+      end_at: selectedSlot.endAt,
+    })
+    .eq("id", appointment.id)
+    .select("id,start_at,end_at")
+    .single();
+
+  if (updateError) {
+    return NextResponse.json({ error: "Could not reschedule appointment." }, { status: 500 });
+  }
+
+  await supabase.from("analytics_events").insert({
+    event_type: "booking_rescheduled",
+    metadata: {
+      appointment_id: appointment.id,
+      appointment_type_id: appointment.appointment_type_id,
+      previous_start_at: previousStartAt,
+      previous_end_at: previousEndAt,
+      new_start_at: updatedAppointment.start_at,
+      new_end_at: updatedAppointment.end_at,
+      rescheduled_by: "patient",
+    },
+  });
+
+  const doctorProfileResult = await supabase
+    .from("doctor_profile")
+    .select("clinic_name,email")
+    .order("created_at")
+    .limit(1)
+    .maybeSingle();
+
+  const appointmentType = Array.isArray(appointment.appointment_types)
+    ? appointment.appointment_types[0]
+    : appointment.appointment_types;
+  const appointmentTypeName =
+    locale === "el"
+      ? appointmentType?.name_el ?? "Άλλη θεραπεία"
+      : appointmentType?.name_en ?? "Other";
+  const clinicName = doctorProfileResult.data?.clinic_name ?? "Dental Clinic";
+  const doctorEmail = doctorProfileResult.data?.email;
+
+  if (doctorEmail) {
+    const emailInput = {
+      locale,
+      clinicName,
+      doctorEmail,
+      appointmentTypeName,
+      patientName: appointment.patient_name,
+      patientEmail: appointment.patient_email,
+      patientPhone: appointment.patient_phone,
+      patientNote: appointment.patient_note,
+      startAt: updatedAppointment.start_at,
+      endAt: updatedAppointment.end_at,
+      previousStartAt,
+      previousEndAt,
+    };
+
+    await Promise.allSettled([
+      sendPatientRescheduleConfirmation(emailInput),
+      sendDoctorRescheduleNotification(emailInput),
+    ]);
+  }
+
+  return NextResponse.json({
+    appointment: {
+      id: updatedAppointment.id,
+      startAt: updatedAppointment.start_at,
+      endAt: updatedAppointment.end_at,
+    },
+  });
+}

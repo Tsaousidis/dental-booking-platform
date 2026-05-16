@@ -18,6 +18,9 @@ type BookingEmailInput = {
   startAt: string;
   endAt: string;
   cancelUrl?: string;
+  rescheduleUrl?: string;
+  previousStartAt?: string;
+  previousEndAt?: string;
 };
 
 export async function sendPatientBookingConfirmation(input: BookingEmailInput) {
@@ -54,6 +57,11 @@ export async function sendPatientBookingConfirmation(input: BookingEmailInput) {
               [string, string]
             >)
           : []),
+        ...(input.rescheduleUrl
+          ? ([[isGreek ? "Αλλαγή ώρας" : "Reschedule", input.rescheduleUrl]] as Array<
+              [string, string]
+            >)
+          : []),
       ],
     }),
     text: [
@@ -64,6 +72,9 @@ export async function sendPatientBookingConfirmation(input: BookingEmailInput) {
       `${isGreek ? "Κλινική" : "Clinic"}: ${input.clinicName}`,
       input.cancelUrl
         ? `${isGreek ? "Ακύρωση" : "Cancellation"}: ${input.cancelUrl}`
+        : "",
+      input.rescheduleUrl
+        ? `${isGreek ? "Αλλαγή ώρας" : "Reschedule"}: ${input.rescheduleUrl}`
         : "",
     ].join("\n"),
   });
@@ -178,6 +189,86 @@ export async function sendDoctorCancellationNotification(input: BookingEmailInpu
       `Τηλέφωνο: ${input.patientPhone}`,
       `Θεραπεία: ${input.appointmentTypeName}`,
       `Ημερομηνία / ώρα: ${appointmentTime}`,
+    ].join("\n"),
+  });
+}
+
+export async function sendPatientRescheduleConfirmation(input: BookingEmailInput) {
+  const client = getEmailClient();
+
+  if (!client) {
+    return { skipped: true };
+  }
+
+  const isGreek = input.locale === "el";
+  const subject = isGreek
+    ? `Αλλαγή ραντεβού - ${input.clinicName}`
+    : `Appointment rescheduled - ${input.clinicName}`;
+  const appointmentTime = formatAppointmentTime(input.startAt, input.endAt);
+
+  return client.resend.emails.send({
+    from: client.from,
+    to: input.patientEmail,
+    subject,
+    html: emailHtml({
+      title: subject,
+      greeting: isGreek ? `Γεια σας ${input.patientName},` : `Hello ${input.patientName},`,
+      body: isGreek
+        ? "Το ραντεβού σας άλλαξε επιτυχώς."
+        : "Your appointment has been rescheduled.",
+      rows: [
+        [isGreek ? "Θεραπεία" : "Treatment", input.appointmentTypeName],
+        [isGreek ? "Νέα ημερομηνία / ώρα" : "New date / time", appointmentTime],
+      ],
+    }),
+    text: [
+      isGreek ? `Γεια σας ${input.patientName},` : `Hello ${input.patientName},`,
+      isGreek ? "Το ραντεβού σας άλλαξε επιτυχώς." : "Your appointment has been rescheduled.",
+      `${isGreek ? "Θεραπεία" : "Treatment"}: ${input.appointmentTypeName}`,
+      `${isGreek ? "Νέα ημερομηνία / ώρα" : "New date / time"}: ${appointmentTime}`,
+    ].join("\n"),
+  });
+}
+
+export async function sendDoctorRescheduleNotification(input: BookingEmailInput) {
+  const client = getEmailClient();
+
+  if (!client) {
+    return { skipped: true };
+  }
+
+  const appointmentTime = formatAppointmentTime(input.startAt, input.endAt);
+  const previousTime =
+    input.previousStartAt && input.previousEndAt
+      ? formatAppointmentTime(input.previousStartAt, input.previousEndAt)
+      : "-";
+  const subject = `Αλλαγή ραντεβού - ${input.patientName}`;
+
+  return client.resend.emails.send({
+    from: client.from,
+    to: input.doctorEmail,
+    subject,
+    html: emailHtml({
+      title: subject,
+      greeting: "Άλλαξε ραντεβού",
+      body: "Ένας ασθενής άλλαξε την ώρα του ραντεβού μέσω secure link.",
+      rows: [
+        ["Ασθενής", input.patientName],
+        ["Email", input.patientEmail],
+        ["Τηλέφωνο", input.patientPhone],
+        ["Θεραπεία", input.appointmentTypeName],
+        ["Προηγούμενη ώρα", previousTime],
+        ["Νέα ώρα", appointmentTime],
+      ],
+    }),
+    text: [
+      "Άλλαξε ραντεβού",
+      `Ασθενής: ${input.patientName}`,
+      `Email: ${input.patientEmail}`,
+      `Τηλέφωνο: ${input.patientPhone}`,
+      `Θεραπεία: ${input.appointmentTypeName}`,
+      `Προηγούμενη ώρα: ${previousTime}`,
+      `Νέα ώρα: ${appointmentTime}`,
     ].join("\n"),
   });
 }

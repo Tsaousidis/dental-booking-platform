@@ -14,7 +14,10 @@ import {
   getAvailableDays,
 } from "./availability";
 
-export async function getAvailabilityForAppointmentType(appointmentTypeId: string) {
+export async function getAvailabilityForAppointmentType(
+  appointmentTypeId: string,
+  options: { excludeAppointmentId?: string } = {},
+) {
   const supabase = createAdminClient();
 
   const [
@@ -57,18 +60,24 @@ export async function getAvailabilityForAppointmentType(appointmentTypeId: strin
   const now = new Date();
   const searchEnd = addDays(now, settings.booking_horizon_days + 1).toISOString();
 
+  let appointmentsQuery = supabase
+    .from("appointments")
+    .select("id,start_at,end_at,status")
+    .eq("status", "confirmed")
+    .lte("start_at", searchEnd)
+    .gte("end_at", now.toISOString());
+
+  if (options.excludeAppointmentId) {
+    appointmentsQuery = appointmentsQuery.neq("id", options.excludeAppointmentId);
+  }
+
   const [blockedSlotsResult, appointmentsResult] = await Promise.all([
     supabase
       .from("blocked_slots")
       .select("start_at,end_at")
       .lte("start_at", searchEnd)
       .gte("end_at", now.toISOString()),
-    supabase
-      .from("appointments")
-      .select("start_at,end_at,status")
-      .eq("status", "confirmed")
-      .lte("start_at", searchEnd)
-      .gte("end_at", now.toISOString()),
+    appointmentsQuery,
   ]);
 
   throwIfSupabaseError(blockedSlotsResult.error);

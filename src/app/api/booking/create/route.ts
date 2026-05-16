@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       end_at: selectedSlot.endAt,
       status: "confirmed",
     })
-    .select("id,start_at,end_at,cancel_token")
+    .select("id,start_at,end_at,cancel_token,reschedule_token")
     .single();
 
   if (appointmentError) {
@@ -110,6 +110,7 @@ export async function POST(request: Request) {
       startAt: appointment.start_at,
       endAt: appointment.end_at,
       cancelUrl: `${site.url}/${input.locale}/booking/cancel?token=${appointment.cancel_token}`,
+      rescheduleUrl: `${site.url}/${input.locale}/booking/reschedule?token=${appointment.reschedule_token}`,
     };
 
     await Promise.allSettled([
