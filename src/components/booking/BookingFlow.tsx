@@ -190,6 +190,7 @@ export function BookingFlow({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        locale,
         appointmentTypeId: selectedType.id,
         startAt: selectedSlot.startAt,
         patientName,
