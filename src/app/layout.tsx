@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
+import { brand } from "@/config/brand";
+import { site } from "@/config/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Athenian Dental Studio",
+  metadataBase: new URL(site.url),
+  title: {
+    default: brand.clinicName,
+    template: `%s`,
+  },
   description: "Premium bilingual dental booking platform.",
 };
 
