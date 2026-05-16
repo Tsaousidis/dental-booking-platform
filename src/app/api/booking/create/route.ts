@@ -6,6 +6,7 @@ import {
   sendDoctorNewBookingNotification,
   sendPatientBookingConfirmation,
 } from "@/lib/emails/booking-emails";
+import { createCalendarEvent } from "@/lib/google-calendar/events";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { site } from "@/config/site";
 
@@ -98,6 +99,24 @@ export async function POST(request: Request) {
   const doctorEmail = doctorProfileResult.data?.email;
 
   if (appointmentTypeName && doctorEmail) {
+    const calendarEventId = await createCalendarEvent({
+      appointmentId: appointment.id,
+      appointmentTypeName,
+      patientName: input.patientName,
+      patientEmail: input.patientEmail,
+      patientPhone: input.patientPhone,
+      patientNote: input.patientNote,
+      startAt: appointment.start_at,
+      endAt: appointment.end_at,
+    }).catch(() => null);
+
+    if (calendarEventId) {
+      await supabase
+        .from("appointments")
+        .update({ google_event_id: calendarEventId })
+        .eq("id", appointment.id);
+    }
+
     const emailInput = {
       locale: input.locale,
       clinicName,

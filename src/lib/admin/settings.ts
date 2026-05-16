@@ -57,6 +57,12 @@ export type BlockedSlot = {
   reason: string | null;
 };
 
+export type GoogleCalendarConnection = {
+  google_account_email: string | null;
+  calendar_id: string | null;
+  is_connected: boolean;
+};
+
 export type AdminSettingsData = {
   doctorProfile: DoctorProfile | null;
   bookingSettings: BookingSettings | null;
@@ -64,6 +70,7 @@ export type AdminSettingsData = {
   doctorSchedule: DoctorSchedule[];
   scheduleBreaks: ScheduleBreak[];
   blockedSlots: BlockedSlot[];
+  googleCalendarConnection: GoogleCalendarConnection | null;
 };
 
 export async function getAdminSettings(): Promise<AdminSettingsData> {
@@ -76,6 +83,7 @@ export async function getAdminSettings(): Promise<AdminSettingsData> {
     doctorScheduleResult,
     scheduleBreaksResult,
     blockedSlotsResult,
+    googleCalendarConnectionResult,
   ] = await Promise.all([
     supabase.from("doctor_profile").select("*").order("created_at").limit(1).maybeSingle(),
     supabase.from("booking_settings").select("*").order("created_at").limit(1).maybeSingle(),
@@ -96,6 +104,13 @@ export async function getAdminSettings(): Promise<AdminSettingsData> {
       .from("blocked_slots")
       .select("*")
       .order("start_at", { ascending: true }),
+    supabase
+      .from("google_calendar_connections")
+      .select("google_account_email,calendar_id,is_connected")
+      .eq("is_connected", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   throwIfSupabaseError(doctorProfileResult.error);
@@ -104,6 +119,7 @@ export async function getAdminSettings(): Promise<AdminSettingsData> {
   throwIfSupabaseError(doctorScheduleResult.error);
   throwIfSupabaseError(scheduleBreaksResult.error);
   throwIfSupabaseError(blockedSlotsResult.error);
+  throwIfSupabaseError(googleCalendarConnectionResult.error);
 
   return {
     doctorProfile: doctorProfileResult.data,
@@ -112,6 +128,7 @@ export async function getAdminSettings(): Promise<AdminSettingsData> {
     doctorSchedule: doctorScheduleResult.data ?? [],
     scheduleBreaks: scheduleBreaksResult.data ?? [],
     blockedSlots: blockedSlotsResult.data ?? [],
+    googleCalendarConnection: googleCalendarConnectionResult.data,
   };
 }
 

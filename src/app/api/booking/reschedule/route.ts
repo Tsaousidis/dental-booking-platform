@@ -6,6 +6,7 @@ import {
   sendDoctorRescheduleNotification,
   sendPatientRescheduleConfirmation,
 } from "@/lib/emails/booking-emails";
+import { updateCalendarEvent } from "@/lib/google-calendar/events";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({
@@ -24,6 +25,7 @@ type AppointmentRow = {
   start_at: string;
   end_at: string;
   status: "confirmed" | "completed" | "cancelled" | "no_show";
+  google_event_id: string | null;
   appointment_types:
     | {
         name_el: string;
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from("appointments")
     .select(
-      "id,appointment_type_id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,status,appointment_types(name_el,name_en)",
+      "id,appointment_type_id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,status,google_event_id,appointment_types(name_el,name_en)",
     )
     .eq("reschedule_token", token)
     .maybeSingle();
@@ -124,6 +126,18 @@ export async function POST(request: Request) {
       : appointmentType?.name_en ?? "Other";
   const clinicName = doctorProfileResult.data?.clinic_name ?? "Dental Clinic";
   const doctorEmail = doctorProfileResult.data?.email;
+
+  await updateCalendarEvent({
+    eventId: appointment.google_event_id,
+    appointmentId: appointment.id,
+    appointmentTypeName,
+    patientName: appointment.patient_name,
+    patientEmail: appointment.patient_email,
+    patientPhone: appointment.patient_phone,
+    patientNote: appointment.patient_note,
+    startAt: updatedAppointment.start_at,
+    endAt: updatedAppointment.end_at,
+  }).catch(() => null);
 
   if (doctorEmail) {
     const emailInput = {

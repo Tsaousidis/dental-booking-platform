@@ -1,5 +1,6 @@
 import { formatInTimeZone } from "date-fns-tz";
 import { Save } from "lucide-react";
+import Link from "next/link";
 
 import {
   type AdminSettingsData,
@@ -25,6 +26,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
     doctorSchedule,
     scheduleBreaks,
     blockedSlots,
+    googleCalendarConnection,
   } = data;
 
   if (!doctorProfile || !bookingSettings) {
@@ -215,6 +217,34 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
             <TextField label="Αιτία" name="new_blocked_reason" defaultValue="" required={false} />
             <p className="flex items-end pb-3 text-sm text-muted">Προσθήκη με αποθήκευση</p>
           </div>
+        </div>
+      </section>
+
+      <section className="border border-line bg-surface p-6">
+        <SectionHeader
+          title="Google Calendar"
+          description="Σύνδεση με το ημερολόγιο του γιατρού ώστε κάθε νέο booking να δημιουργεί event αυτόματα."
+        />
+        <div className="mt-6 flex flex-col justify-between gap-4 border border-line bg-background p-4 md:flex-row md:items-center">
+          <div>
+            <p className="text-sm font-semibold">
+              {googleCalendarConnection?.is_connected
+                ? "Συνδεδεμένο"
+                : "Δεν έχει συνδεθεί"}
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              {googleCalendarConnection?.google_account_email ??
+                "Συνδέστε Google Calendar από το κουμπί δεξιά."}
+            </p>
+          </div>
+          <Link
+            href="/api/google/connect"
+            className="inline-flex min-h-11 items-center justify-center bg-foreground px-5 text-sm font-semibold text-background transition hover:bg-accent"
+          >
+            {googleCalendarConnection?.is_connected
+              ? "Επανασύνδεση"
+              : "Σύνδεση Google Calendar"}
+          </Link>
         </div>
       </section>
 

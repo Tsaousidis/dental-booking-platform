@@ -5,6 +5,7 @@ import {
   sendDoctorCancellationNotification,
   sendPatientCancellationConfirmation,
 } from "@/lib/emails/booking-emails";
+import { deleteCalendarEvent } from "@/lib/google-calendar/events";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const cancelBookingSchema = z.object({
@@ -22,6 +23,7 @@ type AppointmentRow = {
   start_at: string;
   end_at: string;
   status: "confirmed" | "completed" | "cancelled" | "no_show";
+  google_event_id: string | null;
   appointment_types:
     | {
         name_el: string;
@@ -50,7 +52,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from("appointments")
     .select(
-      "id,appointment_type_id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,status,appointment_types(name_el,name_en)",
+      "id,appointment_type_id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,status,google_event_id,appointment_types(name_el,name_en)",
     )
     .eq("cancel_token", token)
     .maybeSingle();
@@ -96,6 +98,8 @@ export async function POST(request: Request) {
       cancelled_by: "patient",
     },
   });
+
+  await deleteCalendarEvent(appointment.google_event_id).catch(() => null);
 
   const [doctorProfileResult] = await Promise.all([
     supabase
