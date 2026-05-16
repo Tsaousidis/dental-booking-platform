@@ -110,7 +110,7 @@ function getCalendarClient(connection: CalendarConnection) {
 
 function buildEvent(input: CalendarAppointmentInput) {
   return {
-    summary: `Dental Appointment - ${input.appointmentTypeName}`,
+    summary: `${input.appointmentTypeName} - ${input.patientName}`,
     description: [
       `Patient: ${input.patientName}`,
       `Email: ${input.patientEmail}`,
