@@ -119,6 +119,86 @@ export async function sendDoctorNewBookingNotification(input: BookingEmailInput)
   });
 }
 
+export async function sendPatientReminderEmail(input: BookingEmailInput) {
+  const client = getEmailClient();
+
+  if (!client) {
+    return { skipped: true };
+  }
+
+  const isGreek = input.locale === "el";
+  const subject = isGreek
+    ? `Υπενθύμιση ραντεβού - ${input.clinicName}`
+    : `Appointment reminder - ${input.clinicName}`;
+  const appointmentTime = formatAppointmentTime(input.startAt, input.endAt);
+
+  return client.resend.emails.send({
+    from: client.from,
+    to: input.patientEmail,
+    subject,
+    html: emailHtml({
+      title: subject,
+      greeting: isGreek ? `Γεια σας ${input.patientName},` : `Hello ${input.patientName},`,
+      body: isGreek
+        ? "Σας υπενθυμίζουμε το επερχόμενο ραντεβού σας."
+        : "This is a reminder for your upcoming appointment.",
+      rows: [
+        [isGreek ? "Θεραπεία" : "Treatment", input.appointmentTypeName],
+        [isGreek ? "Ημερομηνία / ώρα" : "Date / time", appointmentTime],
+        [isGreek ? "Κλινική" : "Clinic", input.clinicName],
+      ],
+    }),
+    text: [
+      isGreek ? `Γεια σας ${input.patientName},` : `Hello ${input.patientName},`,
+      isGreek
+        ? "Σας υπενθυμίζουμε το επερχόμενο ραντεβού σας."
+        : "This is a reminder for your upcoming appointment.",
+      `${isGreek ? "Θεραπεία" : "Treatment"}: ${input.appointmentTypeName}`,
+      `${isGreek ? "Ημερομηνία / ώρα" : "Date / time"}: ${appointmentTime}`,
+      `${isGreek ? "Κλινική" : "Clinic"}: ${input.clinicName}`,
+    ].join("\n"),
+  });
+}
+
+export async function sendDoctorReminderEmail(input: BookingEmailInput) {
+  const client = getEmailClient();
+
+  if (!client) {
+    return { skipped: true };
+  }
+
+  const appointmentTime = formatAppointmentTime(input.startAt, input.endAt);
+  const subject = `Υπενθύμιση ραντεβού - ${input.patientName}`;
+
+  return client.resend.emails.send({
+    from: client.from,
+    to: input.doctorEmail,
+    subject,
+    html: emailHtml({
+      title: subject,
+      greeting: "Υπενθύμιση επερχόμενου ραντεβού",
+      body: "Υπάρχει επιβεβαιωμένο ραντεβού που πλησιάζει.",
+      rows: [
+        ["Ασθενής", input.patientName],
+        ["Email", input.patientEmail],
+        ["Τηλέφωνο", input.patientPhone],
+        ["Θεραπεία", input.appointmentTypeName],
+        ["Ημερομηνία / ώρα", appointmentTime],
+        ["Σημείωση", input.patientNote || "-"],
+      ],
+    }),
+    text: [
+      "Υπενθύμιση επερχόμενου ραντεβού",
+      `Ασθενής: ${input.patientName}`,
+      `Email: ${input.patientEmail}`,
+      `Τηλέφωνο: ${input.patientPhone}`,
+      `Θεραπεία: ${input.appointmentTypeName}`,
+      `Ημερομηνία / ώρα: ${appointmentTime}`,
+      `Σημείωση: ${input.patientNote || "-"}`,
+    ].join("\n"),
+  });
+}
+
 export async function sendPatientCancellationConfirmation(input: BookingEmailInput) {
   const client = getEmailClient();
 
