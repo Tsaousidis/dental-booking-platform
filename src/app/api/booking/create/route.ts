@@ -91,7 +91,8 @@ export async function POST(request: Request) {
     },
   });
 
-  const [appointmentTypeResult, doctorProfileResult] = await Promise.all([
+  const [appointmentTypeResult, doctorProfileResult, notificationSettingsResult] =
+    await Promise.all([
     supabase
       .from("appointment_types")
       .select("name_el,name_en")
@@ -100,6 +101,12 @@ export async function POST(request: Request) {
     supabase
       .from("doctor_profile")
       .select("clinic_name,email")
+      .order("created_at")
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("notification_settings")
+      .select("patient_confirmation_email_enabled,doctor_new_booking_email_enabled")
       .order("created_at")
       .limit(1)
       .maybeSingle(),
@@ -146,10 +153,18 @@ export async function POST(request: Request) {
       rescheduleUrl: `${site.url}/${input.locale}/booking/reschedule?token=${appointment.reschedule_token}`,
     };
 
-    await Promise.allSettled([
-      sendPatientBookingConfirmation(emailInput),
-      sendDoctorNewBookingNotification(emailInput),
-    ]);
+    const notifications = notificationSettingsResult.data;
+    const emailTasks = [];
+
+    if (notifications?.patient_confirmation_email_enabled ?? true) {
+      emailTasks.push(sendPatientBookingConfirmation(emailInput));
+    }
+
+    if (notifications?.doctor_new_booking_email_enabled ?? true) {
+      emailTasks.push(sendDoctorNewBookingNotification(emailInput));
+    }
+
+    await Promise.allSettled(emailTasks);
   }
 
   return NextResponse.json({

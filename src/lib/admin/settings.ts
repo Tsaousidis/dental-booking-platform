@@ -63,9 +63,23 @@ export type GoogleCalendarConnection = {
   is_connected: boolean;
 };
 
+export type NotificationSettings = {
+  id: string;
+  doctor_new_booking_email_enabled: boolean;
+  doctor_reminder_email_enabled: boolean;
+  doctor_cancellation_email_enabled: boolean;
+  doctor_reschedule_email_enabled: boolean;
+  patient_confirmation_email_enabled: boolean;
+  patient_reminder_email_enabled: boolean;
+  patient_cancellation_email_enabled: boolean;
+  patient_reschedule_email_enabled: boolean;
+  reminder_hours_before: number;
+};
+
 export type AdminSettingsData = {
   doctorProfile: DoctorProfile | null;
   bookingSettings: BookingSettings | null;
+  notificationSettings: NotificationSettings | null;
   appointmentTypes: AppointmentType[];
   doctorSchedule: DoctorSchedule[];
   scheduleBreaks: ScheduleBreak[];
@@ -79,6 +93,7 @@ export async function getAdminSettings(): Promise<AdminSettingsData> {
   const [
     doctorProfileResult,
     bookingSettingsResult,
+    notificationSettingsResult,
     appointmentTypesResult,
     doctorScheduleResult,
     scheduleBreaksResult,
@@ -87,6 +102,12 @@ export async function getAdminSettings(): Promise<AdminSettingsData> {
   ] = await Promise.all([
     supabase.from("doctor_profile").select("*").order("created_at").limit(1).maybeSingle(),
     supabase.from("booking_settings").select("*").order("created_at").limit(1).maybeSingle(),
+    supabase
+      .from("notification_settings")
+      .select("*")
+      .order("created_at")
+      .limit(1)
+      .maybeSingle(),
     supabase
       .from("appointment_types")
       .select("*")
@@ -115,6 +136,7 @@ export async function getAdminSettings(): Promise<AdminSettingsData> {
 
   throwIfSupabaseError(doctorProfileResult.error);
   throwIfSupabaseError(bookingSettingsResult.error);
+  throwIfSupabaseError(notificationSettingsResult.error);
   throwIfSupabaseError(appointmentTypesResult.error);
   throwIfSupabaseError(doctorScheduleResult.error);
   throwIfSupabaseError(scheduleBreaksResult.error);
@@ -124,6 +146,7 @@ export async function getAdminSettings(): Promise<AdminSettingsData> {
   return {
     doctorProfile: doctorProfileResult.data,
     bookingSettings: bookingSettingsResult.data,
+    notificationSettings: notificationSettingsResult.data,
     appointmentTypes: appointmentTypesResult.data ?? [],
     doctorSchedule: doctorScheduleResult.data ?? [],
     scheduleBreaks: scheduleBreaksResult.data ?? [],
@@ -139,6 +162,7 @@ export async function saveAdminSettings(formData: FormData) {
 
   const doctorProfileId = getRequiredValue(formData, "doctor_profile_id");
   const bookingSettingsId = getRequiredValue(formData, "booking_settings_id");
+  const notificationSettingsId = getOptionalValue(formData, "notification_settings_id");
   const appointmentTypeIds = getCsvIds(formData, "appointment_type_ids");
   const scheduleIds = getCsvIds(formData, "schedule_ids");
   const breakIds = getCsvIds(formData, "break_ids");
@@ -161,6 +185,28 @@ export async function saveAdminSettings(formData: FormData) {
     timezone: getRequiredValue(formData, "booking_timezone"),
   };
 
+  const notificationSettings = notificationSettingsId
+    ? {
+        doctor_new_booking_email_enabled:
+          formData.get("doctor_new_booking_email_enabled") === "on",
+        doctor_reminder_email_enabled:
+          formData.get("doctor_reminder_email_enabled") === "on",
+        doctor_cancellation_email_enabled:
+          formData.get("doctor_cancellation_email_enabled") === "on",
+        doctor_reschedule_email_enabled:
+          formData.get("doctor_reschedule_email_enabled") === "on",
+        patient_confirmation_email_enabled:
+          formData.get("patient_confirmation_email_enabled") === "on",
+        patient_reminder_email_enabled:
+          formData.get("patient_reminder_email_enabled") === "on",
+        patient_cancellation_email_enabled:
+          formData.get("patient_cancellation_email_enabled") === "on",
+        patient_reschedule_email_enabled:
+          formData.get("patient_reschedule_email_enabled") === "on",
+        reminder_hours_before: getPositiveInteger(formData, "reminder_hours_before"),
+      }
+    : null;
+
   const timezone = bookingSettings.timezone || DEFAULT_TIMEZONE;
 
   const { error: doctorProfileError } = await supabase
@@ -174,6 +220,14 @@ export async function saveAdminSettings(formData: FormData) {
     .update(bookingSettings)
     .eq("id", bookingSettingsId);
   throwIfSupabaseError(bookingSettingsError);
+
+  if (notificationSettings && notificationSettingsId) {
+    const { error: notificationSettingsError } = await supabase
+      .from("notification_settings")
+      .update(notificationSettings)
+      .eq("id", notificationSettingsId);
+    throwIfSupabaseError(notificationSettingsError);
+  }
 
   await Promise.all([
     ...appointmentTypeIds.map((id) => updateAppointmentType(formData, id)),

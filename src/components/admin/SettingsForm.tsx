@@ -22,6 +22,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
   const {
     doctorProfile,
     bookingSettings,
+    notificationSettings,
     appointmentTypes,
     doctorSchedule,
     scheduleBreaks,
@@ -47,6 +48,9 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
     <form action={saveAdminSettings} className="grid gap-6">
       <input type="hidden" name="doctor_profile_id" value={doctorProfile.id} />
       <input type="hidden" name="booking_settings_id" value={bookingSettings.id} />
+      {notificationSettings ? (
+        <input type="hidden" name="notification_settings_id" value={notificationSettings.id} />
+      ) : null}
       <input
         type="hidden"
         name="appointment_type_ids"
@@ -219,6 +223,76 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           </div>
         </div>
       </section>
+
+      {notificationSettings ? (
+        <section className="border border-line bg-surface p-6">
+          <SectionHeader
+            title="Ειδοποιήσεις"
+            description="Έλεγχος για το ποια emails στέλνονται αυτόματα σε ασθενή και γιατρό."
+          />
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <div className="border border-line bg-background p-4">
+              <h3 className="text-base font-semibold">Emails ασθενή</h3>
+              <div className="mt-4 grid gap-3">
+                <ToggleField
+                  label="Επιβεβαίωση νέου ραντεβού"
+                  name="patient_confirmation_email_enabled"
+                  defaultChecked={notificationSettings.patient_confirmation_email_enabled}
+                />
+                <ToggleField
+                  label="Υπενθύμιση ραντεβού"
+                  name="patient_reminder_email_enabled"
+                  defaultChecked={notificationSettings.patient_reminder_email_enabled}
+                />
+                <ToggleField
+                  label="Επιβεβαίωση ακύρωσης"
+                  name="patient_cancellation_email_enabled"
+                  defaultChecked={notificationSettings.patient_cancellation_email_enabled}
+                />
+                <ToggleField
+                  label="Επιβεβαίωση αλλαγής ώρας"
+                  name="patient_reschedule_email_enabled"
+                  defaultChecked={notificationSettings.patient_reschedule_email_enabled}
+                />
+              </div>
+            </div>
+
+            <div className="border border-line bg-background p-4">
+              <h3 className="text-base font-semibold">Emails γιατρού</h3>
+              <div className="mt-4 grid gap-3">
+                <ToggleField
+                  label="Νέο ραντεβού"
+                  name="doctor_new_booking_email_enabled"
+                  defaultChecked={notificationSettings.doctor_new_booking_email_enabled}
+                />
+                <ToggleField
+                  label="Υπενθύμιση ραντεβού"
+                  name="doctor_reminder_email_enabled"
+                  defaultChecked={notificationSettings.doctor_reminder_email_enabled}
+                />
+                <ToggleField
+                  label="Ακύρωση ραντεβού"
+                  name="doctor_cancellation_email_enabled"
+                  defaultChecked={notificationSettings.doctor_cancellation_email_enabled}
+                />
+                <ToggleField
+                  label="Αλλαγή ώρας"
+                  name="doctor_reschedule_email_enabled"
+                  defaultChecked={notificationSettings.doctor_reschedule_email_enabled}
+                />
+              </div>
+            </div>
+
+            <NumberField
+              label="Πότε στέλνεται reminder"
+              name="reminder_hours_before"
+              defaultValue={notificationSettings.reminder_hours_before}
+              min={1}
+              suffix="ώρες πριν"
+            />
+          </div>
+        </section>
+      ) : null}
 
       <section className="border border-line bg-surface p-6">
         <SectionHeader
@@ -489,6 +563,28 @@ function DeleteCheckbox({ name }: { name: string }) {
     <label className="flex items-end gap-3 pb-3 text-sm font-medium text-red-700">
       <input type="checkbox" name={name} className="h-5 w-5 accent-red-700" />
       Διαγραφή
+    </label>
+  );
+}
+
+function ToggleField({
+  label,
+  name,
+  defaultChecked,
+}: {
+  label: string;
+  name: string;
+  defaultChecked: boolean;
+}) {
+  return (
+    <label className="flex min-h-11 items-center justify-between gap-4 border border-line bg-surface px-3 text-sm font-medium">
+      <span>{label}</span>
+      <input
+        type="checkbox"
+        name={name}
+        defaultChecked={defaultChecked}
+        className="h-5 w-5 accent-[var(--accent)]"
+      />
     </label>
   );
 }

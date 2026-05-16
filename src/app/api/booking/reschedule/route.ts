@@ -110,12 +110,20 @@ export async function POST(request: Request) {
     },
   });
 
-  const doctorProfileResult = await supabase
-    .from("doctor_profile")
-    .select("clinic_name,email")
-    .order("created_at")
-    .limit(1)
-    .maybeSingle();
+  const [doctorProfileResult, notificationSettingsResult] = await Promise.all([
+    supabase
+      .from("doctor_profile")
+      .select("clinic_name,email")
+      .order("created_at")
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("notification_settings")
+      .select("patient_reschedule_email_enabled,doctor_reschedule_email_enabled")
+      .order("created_at")
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   const appointmentType = Array.isArray(appointment.appointment_types)
     ? appointment.appointment_types[0]
@@ -155,10 +163,18 @@ export async function POST(request: Request) {
       previousEndAt,
     };
 
-    await Promise.allSettled([
-      sendPatientRescheduleConfirmation(emailInput),
-      sendDoctorRescheduleNotification(emailInput),
-    ]);
+    const notifications = notificationSettingsResult.data;
+    const emailTasks = [];
+
+    if (notifications?.patient_reschedule_email_enabled ?? true) {
+      emailTasks.push(sendPatientRescheduleConfirmation(emailInput));
+    }
+
+    if (notifications?.doctor_reschedule_email_enabled ?? true) {
+      emailTasks.push(sendDoctorRescheduleNotification(emailInput));
+    }
+
+    await Promise.allSettled(emailTasks);
   }
 
   return NextResponse.json({

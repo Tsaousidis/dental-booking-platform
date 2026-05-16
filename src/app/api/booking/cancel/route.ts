@@ -101,10 +101,16 @@ export async function POST(request: Request) {
 
   await deleteCalendarEvent(appointment.google_event_id).catch(() => null);
 
-  const [doctorProfileResult] = await Promise.all([
+  const [doctorProfileResult, notificationSettingsResult] = await Promise.all([
     supabase
       .from("doctor_profile")
       .select("clinic_name,email")
+      .order("created_at")
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("notification_settings")
+      .select("patient_cancellation_email_enabled,doctor_cancellation_email_enabled")
       .order("created_at")
       .limit(1)
       .maybeSingle(),
@@ -134,10 +140,18 @@ export async function POST(request: Request) {
       endAt: appointment.end_at,
     };
 
-    await Promise.allSettled([
-      sendPatientCancellationConfirmation(emailInput),
-      sendDoctorCancellationNotification(emailInput),
-    ]);
+    const notifications = notificationSettingsResult.data;
+    const emailTasks = [];
+
+    if (notifications?.patient_cancellation_email_enabled ?? true) {
+      emailTasks.push(sendPatientCancellationConfirmation(emailInput));
+    }
+
+    if (notifications?.doctor_cancellation_email_enabled ?? true) {
+      emailTasks.push(sendDoctorCancellationNotification(emailInput));
+    }
+
+    await Promise.allSettled(emailTasks);
   }
 
   return NextResponse.json({ ok: true, status: "cancelled" });
