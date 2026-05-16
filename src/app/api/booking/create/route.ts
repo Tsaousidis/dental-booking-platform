@@ -7,6 +7,7 @@ import {
   sendPatientBookingConfirmation,
 } from "@/lib/emails/booking-emails";
 import { createCalendarEvent } from "@/lib/google-calendar/events";
+import { checkRateLimit, getRequestIdentifier } from "@/lib/security/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyTurnstileToken } from "@/lib/validation/turnstile";
 import { site } from "@/config/site";
@@ -23,6 +24,25 @@ const createBookingSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const rateLimit = await checkRateLimit({
+    route: "booking:create",
+    identifier: getRequestIdentifier(request),
+    limit: 5,
+    windowSeconds: 60 * 10,
+  });
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many booking attempts. Please try again later." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfter),
+        },
+      },
+    );
+  }
+
   const json = await request.json().catch(() => null);
   const result = createBookingSchema.safeParse(json);
 
