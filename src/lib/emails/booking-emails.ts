@@ -17,6 +17,7 @@ type BookingEmailInput = {
   patientNote?: string | null;
   startAt: string;
   endAt: string;
+  cancelUrl?: string;
 };
 
 export async function sendPatientBookingConfirmation(input: BookingEmailInput) {
@@ -48,6 +49,11 @@ export async function sendPatientBookingConfirmation(input: BookingEmailInput) {
         [isGreek ? "Θεραπεία" : "Treatment", input.appointmentTypeName],
         [isGreek ? "Ημερομηνία / ώρα" : "Date / time", appointmentTime],
         [isGreek ? "Κλινική" : "Clinic", input.clinicName],
+        ...(input.cancelUrl
+          ? ([[isGreek ? "Ακύρωση" : "Cancellation", input.cancelUrl]] as Array<
+              [string, string]
+            >)
+          : []),
       ],
     }),
     text: [
@@ -56,6 +62,9 @@ export async function sendPatientBookingConfirmation(input: BookingEmailInput) {
       `${isGreek ? "Θεραπεία" : "Treatment"}: ${input.appointmentTypeName}`,
       `${isGreek ? "Ημερομηνία / ώρα" : "Date / time"}: ${appointmentTime}`,
       `${isGreek ? "Κλινική" : "Clinic"}: ${input.clinicName}`,
+      input.cancelUrl
+        ? `${isGreek ? "Ακύρωση" : "Cancellation"}: ${input.cancelUrl}`
+        : "",
     ].join("\n"),
   });
 }
@@ -95,6 +104,80 @@ export async function sendDoctorNewBookingNotification(input: BookingEmailInput)
       `Θεραπεία: ${input.appointmentTypeName}`,
       `Ημερομηνία / ώρα: ${appointmentTime}`,
       `Σημείωση: ${input.patientNote || "-"}`,
+    ].join("\n"),
+  });
+}
+
+export async function sendPatientCancellationConfirmation(input: BookingEmailInput) {
+  const client = getEmailClient();
+
+  if (!client) {
+    return { skipped: true };
+  }
+
+  const isGreek = input.locale === "el";
+  const subject = isGreek
+    ? `Ακύρωση ραντεβού - ${input.clinicName}`
+    : `Appointment cancellation - ${input.clinicName}`;
+  const appointmentTime = formatAppointmentTime(input.startAt, input.endAt);
+
+  return client.resend.emails.send({
+    from: client.from,
+    to: input.patientEmail,
+    subject,
+    html: emailHtml({
+      title: subject,
+      greeting: isGreek ? `Γεια σας ${input.patientName},` : `Hello ${input.patientName},`,
+      body: isGreek
+        ? "Το ραντεβού σας ακυρώθηκε."
+        : "Your appointment has been cancelled.",
+      rows: [
+        [isGreek ? "Θεραπεία" : "Treatment", input.appointmentTypeName],
+        [isGreek ? "Ημερομηνία / ώρα" : "Date / time", appointmentTime],
+      ],
+    }),
+    text: [
+      isGreek ? `Γεια σας ${input.patientName},` : `Hello ${input.patientName},`,
+      isGreek ? "Το ραντεβού σας ακυρώθηκε." : "Your appointment has been cancelled.",
+      `${isGreek ? "Θεραπεία" : "Treatment"}: ${input.appointmentTypeName}`,
+      `${isGreek ? "Ημερομηνία / ώρα" : "Date / time"}: ${appointmentTime}`,
+    ].join("\n"),
+  });
+}
+
+export async function sendDoctorCancellationNotification(input: BookingEmailInput) {
+  const client = getEmailClient();
+
+  if (!client) {
+    return { skipped: true };
+  }
+
+  const appointmentTime = formatAppointmentTime(input.startAt, input.endAt);
+  const subject = `Ακύρωση ραντεβού - ${input.patientName}`;
+
+  return client.resend.emails.send({
+    from: client.from,
+    to: input.doctorEmail,
+    subject,
+    html: emailHtml({
+      title: subject,
+      greeting: "Ακυρώθηκε ραντεβού",
+      body: "Ένας ασθενής ακύρωσε το ραντεβού του μέσω secure link.",
+      rows: [
+        ["Ασθενής", input.patientName],
+        ["Email", input.patientEmail],
+        ["Τηλέφωνο", input.patientPhone],
+        ["Θεραπεία", input.appointmentTypeName],
+        ["Ημερομηνία / ώρα", appointmentTime],
+      ],
+    }),
+    text: [
+      "Ακυρώθηκε ραντεβού",
+      `Ασθενής: ${input.patientName}`,
+      `Email: ${input.patientEmail}`,
+      `Τηλέφωνο: ${input.patientPhone}`,
+      `Θεραπεία: ${input.appointmentTypeName}`,
+      `Ημερομηνία / ώρα: ${appointmentTime}`,
     ].join("\n"),
   });
 }

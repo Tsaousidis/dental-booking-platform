@@ -7,6 +7,7 @@ import {
   sendPatientBookingConfirmation,
 } from "@/lib/emails/booking-emails";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { site } from "@/config/site";
 
 const createBookingSchema = z.object({
   locale: z.enum(["el", "en"]).default("el"),
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
       end_at: selectedSlot.endAt,
       status: "confirmed",
     })
-    .select("id,start_at,end_at")
+    .select("id,start_at,end_at,cancel_token")
     .single();
 
   if (appointmentError) {
@@ -108,6 +109,7 @@ export async function POST(request: Request) {
       patientNote: input.patientNote,
       startAt: appointment.start_at,
       endAt: appointment.end_at,
+      cancelUrl: `${site.url}/${input.locale}/booking/cancel?token=${appointment.cancel_token}`,
     };
 
     await Promise.allSettled([
