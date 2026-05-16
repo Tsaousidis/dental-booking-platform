@@ -1,16 +1,18 @@
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { AppointmentsList } from "@/components/admin/AppointmentsList";
+import { getAdminAppointments } from "@/lib/admin/appointments";
 
-export default function AdminAppointmentsPage() {
+export default async function AdminAppointmentsPage() {
+  const appointments = await getAdminAppointments();
+
   return (
     <div className="grid gap-6">
       <AdminPageHeader
         eyebrow="Admin"
         title="Ραντεβού"
-        description="Εδώ θα εμφανίζονται τα επερχόμενα και παλαιότερα ραντεβού μόλις συνδεθεί η δημιουργία booking με το Supabase."
+        description="Προβολή επερχόμενων και παλαιότερων ραντεβού, με γρήγορη αλλαγή status από τον γιατρό."
       />
-      <section className="border border-line bg-surface p-6">
-        <p className="text-sm text-muted">Η βάση για τη διαχείριση ραντεβού είναι έτοιμη.</p>
-      </section>
+      <AppointmentsList appointments={appointments} />
     </div>
   );
 }
