@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Check, Clock, UserRound } from "lucide-react";
+import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { type Locale } from "@/config/locales";
@@ -445,6 +445,25 @@ function StepDay({
   isLoading: boolean;
   onSelect: (value: string) => void;
 }) {
+  const daysByDate = useMemo(
+    () => new Map(days.map((day) => [day.date, day])),
+    [days],
+  );
+  const monthOptions = useMemo(() => {
+    const months = Array.from(new Set(days.map((day) => day.date.slice(0, 7))));
+    return months.length > 0 ? months : [formatMonthKey(new Date())];
+  }, [days]);
+  const [visibleMonth, setVisibleMonth] = useState(
+    selectedDate ? selectedDate.slice(0, 7) : monthOptions[0],
+  );
+  const activeMonth = monthOptions.includes(visibleMonth)
+    ? visibleMonth
+    : selectedDate
+      ? selectedDate.slice(0, 7)
+      : monthOptions[0];
+  const activeMonthIndex = Math.max(monthOptions.indexOf(activeMonth), 0);
+  const calendarCells = useMemo(() => buildCalendarCells(activeMonth), [activeMonth]);
+
   return (
     <div>
       <StepHeading icon={<CalendarDays size={20} />} title={copy.chooseDay} />
@@ -454,25 +473,127 @@ function StepDay({
           {copy.noSlots}
         </p>
       ) : null}
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {days.map((day) => (
-          <button
-            key={day.date}
-            type="button"
-            onClick={() => onSelect(day.date)}
-            className={`min-h-24 rounded-lg border p-4 text-left transition hover:-translate-y-0.5 ${
-              day.date === selectedDate
-                ? "border-accent bg-surface-low"
-                : "border-line/70 bg-surface hover:border-accent"
-            }`}
-          >
-            <span className="block text-base font-medium">{formatDate(day.date, locale)}</span>
-            <span className="mt-2 block text-sm text-muted">{day.slots.length} slots</span>
-          </button>
-        ))}
-      </div>
+      {days.length > 0 ? (
+        <div className="mt-6 rounded-lg border border-line/60 bg-surface p-4 sm:p-6">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <button
+              type="button"
+              disabled={activeMonthIndex === 0}
+              onClick={() => setVisibleMonth(monthOptions[activeMonthIndex - 1] ?? activeMonth)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-line text-accent transition hover:border-accent disabled:cursor-not-allowed disabled:opacity-35"
+              aria-label="Previous month"
+            >
+              <ChevronLeft size={18} aria-hidden="true" />
+            </button>
+            <h3 className="text-lg font-medium text-foreground">
+              {formatMonthLabel(activeMonth, locale)}
+            </h3>
+            <button
+              type="button"
+              disabled={activeMonthIndex >= monthOptions.length - 1}
+              onClick={() => setVisibleMonth(monthOptions[activeMonthIndex + 1] ?? activeMonth)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-line text-accent transition hover:border-accent disabled:cursor-not-allowed disabled:opacity-35"
+              aria-label="Next month"
+            >
+              <ChevronRight size={18} aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1 text-center">
+            {getWeekdayLabels(locale).map((label) => (
+              <div key={label} className="label-caps py-2 text-muted">
+                {label}
+              </div>
+            ))}
+            {calendarCells.map((cell, index) => {
+              if (!cell) {
+                return <div key={`empty-${index}`} className="min-h-14" aria-hidden="true" />;
+              }
+
+              const day = daysByDate.get(cell.date);
+              const isAvailable = Boolean(day);
+              const isSelected = cell.date === selectedDate;
+
+              return (
+                <button
+                  key={cell.date}
+                  type="button"
+                  disabled={!isAvailable}
+                  onClick={() => onSelect(cell.date)}
+                  className={`min-h-14 rounded-sm border p-2 text-sm transition sm:min-h-20 ${
+                    isSelected
+                      ? "border-accent bg-accent text-surface"
+                      : isAvailable
+                        ? "border-line bg-background text-foreground hover:border-accent hover:bg-surface-low"
+                        : "border-transparent bg-transparent text-muted/35"
+                  }`}
+                >
+                  <span className="block font-semibold">{cell.dayNumber}</span>
+                  {day ? (
+                    <span className={`mt-1 block text-[11px] ${isSelected ? "text-surface/75" : "text-muted"}`}>
+                      {day.slots.length} slots
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+
+          {selectedDate ? (
+            <p className="mt-5 rounded-sm border border-line/70 bg-background p-3 text-sm text-muted">
+              {formatDate(selectedDate, locale)}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function buildCalendarCells(monthKey: string) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const firstDay = new Date(year, month - 1, 1, 12);
+  const lastDay = new Date(year, month, 0, 12);
+  const leadingEmptyCells = (firstDay.getDay() + 6) % 7;
+  const cells: Array<{ date: string; dayNumber: number } | null> = Array.from(
+    { length: leadingEmptyCells },
+    () => null,
+  );
+
+  for (let day = 1; day <= lastDay.getDate(); day += 1) {
+    const date = new Date(year, month - 1, day, 12);
+    cells.push({
+      date: formatLocalDate(date),
+      dayNumber: day,
+    });
+  }
+
+  return cells;
+}
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatMonthKey(date: Date) {
+  return formatLocalDate(date).slice(0, 7);
+}
+
+function formatMonthLabel(monthKey: string, locale: Locale) {
+  return new Intl.DateTimeFormat(locale === "el" ? "el-GR" : "en-US", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${monthKey}-01T12:00:00`));
+}
+
+function getWeekdayLabels(locale: Locale) {
+  return locale === "el"
+    ? ["ΔΕ", "ΤΡ", "ΤΕ", "ΠΕ", "ΠΑ", "ΣΑ", "ΚΥ"]
+    : ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 }
 
 function StepTime({
