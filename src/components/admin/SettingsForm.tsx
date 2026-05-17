@@ -32,8 +32,8 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
 
   if (!doctorProfile || !bookingSettings) {
     return (
-      <section className="border border-line bg-surface p-6">
-        <h2 className="text-xl font-semibold">Λείπουν αρχικά δεδομένα</h2>
+      <section className="rounded-lg border border-line/50 bg-surface p-6 ambient-shadow">
+        <h2 className="text-xl font-medium">Λείπουν αρχικά δεδομένα</h2>
         <p className="mt-3 text-sm leading-6 text-muted">
           Τρέξτε το `supabase/seed.sql` στο Supabase SQL editor πριν επεξεργαστείτε
           τις ρυθμίσεις.
@@ -370,10 +370,10 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
         </div>
       </section>
 
-      <div className="sticky bottom-0 border border-line bg-surface p-4 shadow-[0_-12px_30px_rgba(23,23,23,0.08)]">
+      <div className="sticky bottom-0 rounded-lg border border-line/50 bg-surface/95 p-4 shadow-[0_-12px_30px_rgba(104,92,82,0.10)] backdrop-blur">
         <button
           type="submit"
-          className="inline-flex min-h-12 w-full items-center justify-center gap-2 bg-foreground px-6 text-sm font-semibold text-background transition hover:bg-accent sm:w-auto"
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-sm bg-accent px-6 text-sm font-semibold text-surface transition hover:scale-[1.02] hover:bg-foreground sm:w-auto"
         >
           <Save size={17} aria-hidden="true" />
           Αποθήκευση αλλαγών
@@ -416,7 +416,7 @@ function BlockedSlotRow({
 function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
     <div>
-      <h2 className="text-2xl font-semibold">{title}</h2>
+      <h2 className="text-2xl font-medium">{title}</h2>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">{description}</p>
     </div>
   );
@@ -443,7 +443,7 @@ function TextField({
         type={type}
         defaultValue={defaultValue}
         required={required}
-        className="min-h-11 border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
       />
     </label>
   );
@@ -465,7 +465,7 @@ function NumberField({
   return (
     <label className="grid gap-2 text-sm font-medium">
       {label}
-      <span className="flex min-h-11 items-center border border-line bg-background focus-within:border-accent">
+      <span className="flex min-h-11 items-center rounded-sm border border-line bg-background focus-within:border-accent">
         <input
           name={name}
           type="number"
@@ -499,7 +499,7 @@ function TimeField({
         type="time"
         defaultValue={defaultValue}
         required={required}
-        className="min-h-11 border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
       />
     </label>
   );
@@ -524,7 +524,7 @@ function DateTimeField({
         type="datetime-local"
         defaultValue={defaultValue}
         required={required}
-        className="min-h-11 border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
       />
     </label>
   );
@@ -545,7 +545,7 @@ function SelectField({
       <select
         name={name}
         defaultValue={defaultValue}
-        className="min-h-11 border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
       >
         <option value="">Επιλογή</option>
         {dayLabels.map((label, index) => (
@@ -577,7 +577,7 @@ function ToggleField({
   defaultChecked: boolean;
 }) {
   return (
-    <label className="flex min-h-11 items-center justify-between gap-4 border border-line bg-surface px-3 text-sm font-medium">
+    <label className="flex min-h-11 items-center justify-between gap-4 rounded-sm border border-line bg-surface px-3 text-sm font-medium">
       <span>{label}</span>
       <input
         type="checkbox"

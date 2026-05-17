@@ -45,14 +45,14 @@ function AppointmentSection({
   appointments: AdminAppointment[];
 }) {
   return (
-    <section className="border border-line bg-surface p-5 sm:p-6">
+    <section className="rounded-lg border border-line/50 bg-surface p-5 ambient-shadow sm:p-6">
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
-        <h2 className="text-2xl font-semibold">{title}</h2>
+        <h2 className="text-2xl font-medium">{title}</h2>
         <p className="text-sm text-muted">{appointments.length} ραντεβού</p>
       </div>
 
       {appointments.length === 0 ? (
-        <p className="mt-6 border border-line bg-background p-5 text-sm text-muted">
+        <p className="mt-6 rounded-lg border border-line/70 bg-background p-5 text-sm text-muted">
           Δεν υπάρχουν ραντεβού σε αυτή την ενότητα.
         </p>
       ) : (
@@ -68,11 +68,11 @@ function AppointmentSection({
 
 function AppointmentCard({ appointment }: { appointment: AdminAppointment }) {
   return (
-    <article className="grid gap-5 border border-line bg-background p-5 xl:grid-cols-[1fr_220px]">
+    <article className="grid gap-5 rounded-lg border border-line/70 bg-background p-5 transition hover:border-champagne xl:grid-cols-[1fr_220px]">
       <div>
         <div className="flex flex-wrap items-center gap-3">
-          <h3 className="text-xl font-semibold">{appointment.patient_name}</h3>
-          <span className="border border-line bg-surface px-3 py-1 text-xs font-semibold">
+          <h3 className="text-xl font-medium">{appointment.patient_name}</h3>
+          <span className="rounded-full border border-line bg-surface px-3 py-1 text-xs font-semibold">
             {statusLabels[appointment.status]}
           </span>
         </div>
@@ -96,7 +96,7 @@ function AppointmentCard({ appointment }: { appointment: AdminAppointment }) {
           <select
             name="status"
             defaultValue={appointment.status}
-            className="min-h-11 border border-line bg-surface px-3 text-base outline-none transition focus:border-accent"
+            className="min-h-11 rounded-sm border border-line bg-surface px-3 text-base outline-none transition focus:border-accent"
           >
             {statusOptions.map((status) => (
               <option key={status} value={status}>
@@ -107,7 +107,7 @@ function AppointmentCard({ appointment }: { appointment: AdminAppointment }) {
         </label>
         <button
           type="submit"
-          className="min-h-11 bg-foreground px-4 text-sm font-semibold text-background transition hover:bg-accent"
+          className="min-h-11 rounded-sm bg-accent px-4 text-sm font-semibold text-surface transition hover:bg-foreground"
         >
           Αποθήκευση status
         </button>

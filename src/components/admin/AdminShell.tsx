@@ -3,7 +3,7 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 
 import { logout } from "@/app/admin/login/actions";
-import { brand } from "@/config/brand";
+import { BrandMark } from "@/components/layout/BrandMark";
 
 const adminNav = [
   { href: "/admin/appointments", label: "Ραντεβού", icon: CalendarDays },
@@ -20,18 +20,16 @@ export function AdminShell({
 }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-line bg-surface">
+      <header className="sticky top-0 z-40 border-b border-line/40 bg-surface/85 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.22em]">
-              {brand.clinicName}
-            </p>
+          <div className="min-w-0">
+            <BrandMark />
             <p className="mt-1 text-xs text-muted">{email}</p>
           </div>
           <form action={logout}>
             <button
               type="submit"
-              className="inline-flex min-h-10 items-center gap-2 border border-line px-4 text-sm font-medium transition hover:border-accent"
+              className="inline-flex min-h-10 items-center gap-2 rounded-sm border border-line px-4 text-sm font-medium transition hover:border-accent hover:text-accent"
             >
               <LogOut size={16} aria-hidden="true" />
               Αποσύνδεση
@@ -41,7 +39,7 @@ export function AdminShell({
       </header>
 
       <div className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[240px_1fr]">
-        <aside className="lg:sticky lg:top-8 lg:self-start">
+        <aside className="lg:sticky lg:top-28 lg:self-start">
           <nav className="grid gap-2">
             {adminNav.map((item) => {
               const Icon = item.icon;
@@ -50,7 +48,7 @@ export function AdminShell({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex min-h-12 items-center gap-3 border border-line bg-surface px-4 text-sm font-medium transition hover:border-accent"
+                  className="flex min-h-12 items-center gap-3 rounded-lg border border-line/50 bg-surface px-4 text-sm font-medium ambient-shadow transition hover:-translate-y-0.5 hover:border-champagne"
                 >
                   <Icon size={18} className="text-accent" aria-hidden="true" />
                   {item.label}
