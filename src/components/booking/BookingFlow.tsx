@@ -229,10 +229,10 @@ export function BookingFlow({
 
   return (
     <div className="bg-background">
-      <section className="border-b border-line bg-surface">
+      <section className="border-b border-line/30 bg-surface">
         <div className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
-          <p className="text-sm uppercase tracking-[0.22em] text-accent">Online booking</p>
-          <h1 className="mt-5 max-w-4xl text-4xl font-semibold leading-tight sm:text-6xl">
+          <p className="label-caps text-accent">Online booking</p>
+          <h1 className="mt-5 max-w-4xl text-4xl font-light leading-tight sm:text-6xl">
             {copy.title}
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted">{copy.intro}</p>
@@ -240,18 +240,18 @@ export function BookingFlow({
       </section>
 
       <section className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-12 sm:px-8 lg:grid-cols-[280px_1fr]">
-        <aside className="border border-line bg-surface p-4 lg:self-start">
+        <aside className="rounded-lg border border-line/50 bg-surface p-4 ambient-shadow lg:sticky lg:top-28 lg:self-start">
           <div className="grid gap-2">
             {[copy.treatment, copy.day, copy.time, copy.details, copy.confirmation].map(
               (label, index) => (
                 <div
                   key={label}
-                  className={`flex min-h-11 items-center gap-3 border px-3 text-sm font-medium ${
+                  className={`flex min-h-11 items-center gap-3 rounded-sm border px-3 text-sm font-semibold transition ${
                     index === activeStep
-                      ? "border-foreground bg-foreground text-background"
+                      ? "border-accent bg-accent text-surface"
                       : index < activeStep
-                        ? "border-accent bg-background"
-                        : "border-line bg-background text-muted"
+                        ? "border-champagne bg-background text-foreground"
+                        : "border-line/70 bg-background text-muted"
                   }`}
                 >
                   {index < activeStep ? <Check size={16} /> : <span>{index + 1}</span>}
@@ -262,7 +262,7 @@ export function BookingFlow({
           </div>
         </aside>
 
-        <div className="border border-line bg-surface p-5 sm:p-8">
+        <div className="rounded-lg border border-line/50 bg-surface p-5 ambient-shadow sm:p-8">
           {activeStep === 0 ? (
             <StepTreatment
               copy={copy}
@@ -324,12 +324,12 @@ export function BookingFlow({
             />
           ) : null}
 
-          <div className="mt-8 flex flex-col-reverse gap-3 border-t border-line pt-6 sm:flex-row sm:justify-between">
+          <div className="mt-8 flex flex-col-reverse gap-3 border-t border-line/60 pt-6 sm:flex-row sm:justify-between">
             <button
               type="button"
               disabled={activeStep === 0}
               onClick={() => setActiveStep((step) => Math.max(step - 1, 0))}
-              className="min-h-12 border border-line px-5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40"
+              className="min-h-12 rounded-sm border border-line px-5 text-sm font-semibold transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
             >
               {copy.back}
             </button>
@@ -338,7 +338,7 @@ export function BookingFlow({
                 type="button"
                 disabled={!canContinue()}
                 onClick={() => setActiveStep((step) => Math.min(step + 1, steps.length - 1))}
-                className="min-h-12 bg-foreground px-5 text-sm font-semibold text-background transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+                className="min-h-12 rounded-sm bg-accent px-6 text-sm font-semibold text-surface transition hover:scale-[1.02] hover:bg-foreground disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {copy.next}
               </button>
@@ -347,7 +347,7 @@ export function BookingFlow({
                 type="button"
                 disabled={Boolean(confirmedAppointmentId) || isSubmitting}
                 onClick={handleSubmitBooking}
-                className="min-h-12 bg-foreground px-5 text-sm font-semibold text-background transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-12 rounded-sm bg-accent px-6 text-sm font-semibold text-surface transition hover:scale-[1.02] hover:bg-foreground disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? copy.submitting : copy.confirm}
               </button>
@@ -379,13 +379,13 @@ function StepTreatment({
             key={type.id}
             type="button"
             onClick={() => onSelect(type.id)}
-            className={`min-h-32 border p-5 text-left transition ${
+            className={`min-h-32 rounded-lg border p-5 text-left transition hover:-translate-y-0.5 ${
               type.id === selectedTypeId
-                ? "border-foreground bg-background"
-                : "border-line bg-surface hover:border-accent"
+                ? "border-accent bg-surface-low"
+                : "border-line/70 bg-surface hover:border-accent"
             }`}
           >
-            <span className="text-lg font-semibold">{type.name}</span>
+            <span className="text-lg font-medium">{type.name}</span>
             <span className="mt-4 block text-sm text-muted">
               {type.durationMinutes} {copy.minutes}
             </span>
@@ -416,7 +416,7 @@ function StepDay({
       <StepHeading icon={<CalendarDays size={20} />} title={copy.chooseDay} />
       {isLoading ? <p className="mt-6 text-sm text-muted">{copy.loading}</p> : null}
       {!isLoading && days.length === 0 ? (
-        <p className="mt-6 border border-line bg-background p-5 text-sm text-muted">
+        <p className="mt-6 rounded-lg border border-line/70 bg-background p-5 text-sm text-muted">
           {copy.noSlots}
         </p>
       ) : null}
@@ -426,13 +426,13 @@ function StepDay({
             key={day.date}
             type="button"
             onClick={() => onSelect(day.date)}
-            className={`min-h-24 border p-4 text-left transition ${
+            className={`min-h-24 rounded-lg border p-4 text-left transition hover:-translate-y-0.5 ${
               day.date === selectedDate
-                ? "border-foreground bg-background"
-                : "border-line bg-surface hover:border-accent"
+                ? "border-accent bg-surface-low"
+                : "border-line/70 bg-surface hover:border-accent"
             }`}
           >
-            <span className="block text-base font-semibold">{formatDate(day.date, locale)}</span>
+            <span className="block text-base font-medium">{formatDate(day.date, locale)}</span>
             <span className="mt-2 block text-sm text-muted">{day.slots.length} slots</span>
           </button>
         ))}
@@ -455,16 +455,16 @@ function StepTime({
   return (
     <div>
       <StepHeading icon={<Clock size={20} />} title={copy.chooseTime} />
-      <div className="mt-6 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {slots.map((slot) => (
           <button
             key={slot.startAt}
             type="button"
             onClick={() => onSelect(slot.startAt)}
-            className={`min-h-12 border px-4 text-sm font-semibold transition ${
+            className={`min-h-12 rounded-sm border px-4 text-sm font-semibold transition hover:-translate-y-0.5 ${
               slot.startAt === selectedSlotStart
-                ? "border-foreground bg-foreground text-background"
-                : "border-line bg-surface hover:border-accent"
+                ? "border-accent bg-accent text-surface"
+                : "border-line/70 bg-surface hover:border-accent"
             }`}
           >
             {slot.localTime}
@@ -509,7 +509,7 @@ function StepDetails({
             value={patientNote}
             onChange={(event) => setPatientNote(event.target.value)}
             placeholder={copy.notePlaceholder}
-            className="min-h-28 border border-line bg-background px-3 py-3 text-base outline-none transition focus:border-accent"
+            className="min-h-28 rounded-sm border border-line bg-background px-3 py-3 text-base outline-none transition focus:border-accent"
           />
         </label>
       </div>
@@ -559,7 +559,7 @@ function StepConfirmation({
         {patientNote ? <ReviewRow label={copy.note} value={patientNote} /> : null}
       </dl>
       {confirmedAppointmentId ? (
-        <p className="mt-6 border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
+        <p className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
           {copy.bookingSuccess}
         </p>
       ) : (
@@ -571,14 +571,14 @@ function StepConfirmation({
               onExpire={onCaptchaExpire}
             />
           ) : null}
-          <p className="border border-line bg-background p-4 text-sm text-muted">
+          <p className="rounded-lg border border-line/70 bg-background p-4 text-sm text-muted">
             {copy.backendPending}
             {turnstileSiteKey && !captchaToken ? ` ${copy.captchaError}` : ""}
           </p>
         </div>
       )}
       {submitError ? (
-        <p className="mt-3 border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+        <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
           {submitError}
         </p>
       ) : null}
@@ -589,10 +589,10 @@ function StepConfirmation({
 function StepHeading({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="flex h-10 w-10 items-center justify-center bg-foreground text-background">
+      <span className="flex h-10 w-10 items-center justify-center rounded-sm bg-accent text-surface">
         {icon}
       </span>
-      <h2 className="text-2xl font-semibold">{title}</h2>
+      <h2 className="text-2xl font-medium">{title}</h2>
     </div>
   );
 }
@@ -615,7 +615,7 @@ function TextInput({
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="min-h-12 border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        className="min-h-12 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
       />
     </label>
   );
@@ -623,7 +623,7 @@ function TextInput({
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid gap-1 border border-line bg-background p-4 sm:grid-cols-[180px_1fr]">
+    <div className="grid gap-1 rounded-sm border border-line/70 bg-background p-4 sm:grid-cols-[180px_1fr]">
       <dt className="text-sm text-muted">{label}</dt>
       <dd className="text-sm font-semibold">{value}</dd>
     </div>
