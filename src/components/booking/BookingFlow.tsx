@@ -531,7 +531,7 @@ function StepDay({
                   <span className="block font-semibold">{cell.dayNumber}</span>
                   {day ? (
                     <span className={`mt-1 block text-[11px] ${isSelected ? "text-surface/75" : "text-muted"}`}>
-                      {day.slots.length} slots
+                      {formatSlotCount(day.slots.length, locale)}
                     </span>
                   ) : null}
                 </button>
@@ -594,6 +594,14 @@ function getWeekdayLabels(locale: Locale) {
   return locale === "el"
     ? ["ΔΕ", "ΤΡ", "ΤΕ", "ΠΕ", "ΠΑ", "ΣΑ", "ΚΥ"]
     : ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+}
+
+function formatSlotCount(count: number, locale: Locale) {
+  if (locale === "el") {
+    return count === 1 ? "1 επιλογή" : `${count} επιλογές`;
+  }
+
+  return count === 1 ? "1 slot" : `${count} slots`;
 }
 
 function StepTime({
