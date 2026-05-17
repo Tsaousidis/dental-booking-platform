@@ -69,8 +69,9 @@ function AppointmentSection({
         </p>
       ) : (
         <div className="divide-y divide-line/50">
-          <div className="hidden grid-cols-[120px_1.2fr_1fr_130px_170px] gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted lg:grid">
-            <span>Ημέρα</span>
+          <div className="hidden grid-cols-[90px_110px_1.2fr_1fr_130px_170px] gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted lg:grid">
+            <span>Ημερομηνία</span>
+            <span>Ώρα</span>
             <span>Ασθενής</span>
             <span>Θεραπεία</span>
             <span>Status</span>
@@ -89,16 +90,13 @@ function AppointmentRow({ appointment }: { appointment: AdminAppointment }) {
   const date = formatInTimeZone(appointment.start_at, "Europe/Athens", "dd/MM");
   const time = formatInTimeZone(appointment.start_at, "Europe/Athens", "HH:mm");
   const endTime = formatInTimeZone(appointment.end_at, "Europe/Athens", "HH:mm");
+  const timeRange = `${time}-${endTime}`;
   const treatment = appointment.appointment_types?.name_el ?? "Άλλη θεραπεία";
 
   return (
-    <article className="grid gap-4 px-5 py-4 transition hover:bg-surface-low lg:grid-cols-[120px_1.2fr_1fr_130px_170px] lg:items-center">
-      <div className="flex items-baseline gap-3 lg:block">
-        <p className="text-lg font-semibold text-accent">{time}</p>
-        <p className="text-xs text-muted lg:mt-1">
-          {date} · έως {endTime}
-        </p>
-      </div>
+    <article className="grid gap-4 px-5 py-4 transition hover:bg-surface-low lg:grid-cols-[90px_110px_1.2fr_1fr_130px_170px] lg:items-center">
+      <p className="text-sm font-semibold text-foreground">{date}</p>
+      <p className="text-sm font-semibold text-accent">{timeRange}</p>
 
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold">{appointment.patient_name}</p>
