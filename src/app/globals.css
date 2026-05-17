@@ -1,12 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fbfaf8;
-  --foreground: #171717;
-  --muted: #6f746f;
-  --accent: #9d825f;
+  --background: #faf9f7;
+  --foreground: #1a1c1b;
+  --muted: #4d453f;
+  --accent: #685c52;
   --surface: #ffffff;
-  --line: #e7e0d7;
+  --line: #d0c4bc;
+  --champagne: #d4c4b7;
+  --surface-low: #f4f3f1;
+  --surface-container: #efeeec;
+  --surface-high: #e9e8e6;
+  --error: #ba1a1a;
 }
 
 @theme inline {
@@ -16,6 +21,11 @@
   --color-accent: var(--accent);
   --color-surface: var(--surface);
   --color-line: var(--line);
+  --color-champagne: var(--champagne);
+  --color-surface-low: var(--surface-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-high: var(--surface-high);
+  --color-error: var(--error);
   --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
@@ -32,4 +42,20 @@ body {
 
 a {
   text-decoration: none;
+}
+
+.ambient-shadow {
+  box-shadow: 0 10px 30px -10px rgba(212, 196, 183, 0.22);
+}
+
+.ambient-shadow-lg {
+  box-shadow: 0 20px 45px -18px rgba(104, 92, 82, 0.28);
+}
+
+.label-caps {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  line-height: 1rem;
+  text-transform: uppercase;
 }
