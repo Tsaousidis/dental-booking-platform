@@ -25,6 +25,9 @@ export type AdminAppointment = {
 
 export async function getAdminAppointments() {
   const supabase = await createClient();
+
+  await completePastConfirmedAppointments();
+
   const { data, error } = await supabase
     .from("appointments")
     .select(
@@ -42,6 +45,19 @@ export async function getAdminAppointments() {
       ? appointment.appointment_types[0] ?? null
       : appointment.appointment_types,
   }));
+}
+
+export async function completePastConfirmedAppointments() {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("appointments")
+    .update({ status: "completed" })
+    .eq("status", "confirmed")
+    .lte("end_at", new Date().toISOString());
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 export async function updateAppointmentStatus(formData: FormData) {

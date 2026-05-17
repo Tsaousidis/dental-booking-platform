@@ -35,6 +35,7 @@ export async function POST(request: Request) {
   }
 
   const supabase = createAdminClient();
+  const completedPastAppointments = await completePastConfirmedAppointments();
   const [settingsResult, profileResult] = await Promise.all([
     supabase
       .from("notification_settings")
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
   if (!settings || !profile?.email) {
     return NextResponse.json({
       ok: true,
+      completedPastAppointments,
       processed: 0,
       patientRemindersSent: 0,
       doctorRemindersSent: 0,
@@ -155,10 +157,26 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    completedPastAppointments,
     processed: appointments.length,
     patientRemindersSent,
     doctorRemindersSent,
   });
+}
+
+async function completePastConfirmedAppointments() {
+  const supabase = createAdminClient();
+  const { count, error } = await supabase
+    .from("appointments")
+    .update({ status: "completed" }, { count: "exact" })
+    .eq("status", "confirmed")
+    .lte("end_at", new Date().toISOString());
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return count ?? 0;
 }
 
 function wasEmailAccepted(result: unknown) {

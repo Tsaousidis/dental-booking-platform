@@ -3,6 +3,7 @@ import "server-only";
 import { formatInTimeZone } from "date-fns-tz";
 
 import { createClient } from "@/lib/supabase/server";
+import { completePastConfirmedAppointments } from "./appointments";
 
 const TIMEZONE = "Europe/Athens";
 
@@ -58,6 +59,8 @@ type InsightRow = {
 
 export async function getAdminInsights(): Promise<AdminInsights> {
   const supabase = await createClient();
+
+  await completePastConfirmedAppointments();
 
   const [appointmentsResult, analyticsResult] = await Promise.all([
     supabase
