@@ -13,6 +13,13 @@ const statusLabels: Record<AppointmentStatus, string> = {
   no_show: "No-show",
 };
 
+const statusStyles: Record<AppointmentStatus, string> = {
+  confirmed: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  completed: "border-accent/20 bg-champagne/30 text-accent",
+  cancelled: "border-red-200 bg-red-50 text-red-700",
+  no_show: "border-amber-200 bg-amber-50 text-amber-800",
+};
+
 const statusOptions: AppointmentStatus[] = [
   "confirmed",
   "completed",
@@ -32,7 +39,7 @@ export function AppointmentsList({
   return (
     <div className="grid gap-6">
       <AppointmentSection title="Επερχόμενα ραντεβού" appointments={upcoming} />
-      <AppointmentSection title="Παλαιότερα ραντεβού" appointments={past} />
+      <AppointmentSection title="Παλαιότερα ραντεβού" appointments={past} isMuted />
     </div>
   );
 }
@@ -40,25 +47,37 @@ export function AppointmentsList({
 function AppointmentSection({
   title,
   appointments,
+  isMuted = false,
 }: {
   title: string;
   appointments: AdminAppointment[];
+  isMuted?: boolean;
 }) {
   return (
-    <section className="rounded-lg border border-line/50 bg-surface p-5 ambient-shadow sm:p-6">
-      <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
-        <h2 className="text-2xl font-medium">{title}</h2>
+    <section className="rounded-lg border border-line/50 bg-surface ambient-shadow">
+      <div className="flex flex-col justify-between gap-2 border-b border-line/50 px-5 py-4 sm:flex-row sm:items-center">
+        <div>
+          <p className="label-caps text-accent">{isMuted ? "Ιστορικό" : "Πρόγραμμα"}</p>
+          <h2 className="mt-1 text-xl font-medium">{title}</h2>
+        </div>
         <p className="text-sm text-muted">{appointments.length} ραντεβού</p>
       </div>
 
       {appointments.length === 0 ? (
-        <p className="mt-6 rounded-lg border border-line/70 bg-background p-5 text-sm text-muted">
+        <p className="m-5 rounded-lg border border-line/70 bg-background p-5 text-sm text-muted">
           Δεν υπάρχουν ραντεβού σε αυτή την ενότητα.
         </p>
       ) : (
-        <div className="mt-6 grid gap-4">
+        <div className="divide-y divide-line/50">
+          <div className="hidden grid-cols-[120px_1.2fr_1fr_130px_170px] gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-muted lg:grid">
+            <span>Ημέρα</span>
+            <span>Ασθενής</span>
+            <span>Θεραπεία</span>
+            <span>Status</span>
+            <span className="text-right">Αλλαγή</span>
+          </div>
           {appointments.map((appointment) => (
-            <AppointmentCard key={appointment.id} appointment={appointment} />
+            <AppointmentRow key={appointment.id} appointment={appointment} />
           ))}
         </div>
       )}
@@ -66,60 +85,55 @@ function AppointmentSection({
   );
 }
 
-function AppointmentCard({ appointment }: { appointment: AdminAppointment }) {
+function AppointmentRow({ appointment }: { appointment: AdminAppointment }) {
+  const date = formatInTimeZone(appointment.start_at, "Europe/Athens", "dd/MM");
+  const time = formatInTimeZone(appointment.start_at, "Europe/Athens", "HH:mm");
+  const endTime = formatInTimeZone(appointment.end_at, "Europe/Athens", "HH:mm");
+  const treatment = appointment.appointment_types?.name_el ?? "Άλλη θεραπεία";
+
   return (
-    <article className="grid gap-5 rounded-lg border border-line/70 bg-background p-5 transition hover:border-champagne xl:grid-cols-[1fr_220px]">
-      <div>
-        <div className="flex flex-wrap items-center gap-3">
-          <h3 className="text-xl font-medium">{appointment.patient_name}</h3>
-          <span className="rounded-full border border-line bg-surface px-3 py-1 text-xs font-semibold">
-            {statusLabels[appointment.status]}
-          </span>
-        </div>
-        <p className="mt-3 text-sm text-muted">
-          {appointment.appointment_types?.name_el ?? "Άλλη θεραπεία"} ·{" "}
-          {formatAppointmentRange(appointment.start_at, appointment.end_at)}
+    <article className="grid gap-4 px-5 py-4 transition hover:bg-surface-low lg:grid-cols-[120px_1.2fr_1fr_130px_170px] lg:items-center">
+      <div className="flex items-baseline gap-3 lg:block">
+        <p className="text-lg font-semibold text-accent">{time}</p>
+        <p className="text-xs text-muted lg:mt-1">
+          {date} · έως {endTime}
         </p>
-        <div className="mt-5 grid gap-2 text-sm leading-6 text-muted md:grid-cols-2">
-          <p>Email: {appointment.patient_email}</p>
-          <p>Τηλέφωνο: {appointment.patient_phone}</p>
-          {appointment.patient_note ? (
-            <p className="md:col-span-2">Σημείωση: {appointment.patient_note}</p>
-          ) : null}
-        </div>
       </div>
 
-      <form action={updateAppointmentStatus} className="grid content-end gap-3">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold">{appointment.patient_name}</p>
+        <p className="mt-1 truncate text-xs text-muted">{appointment.patient_phone}</p>
+      </div>
+
+      <p className="truncate text-sm text-muted">{treatment}</p>
+
+      <span
+        className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[appointment.status]}`}
+      >
+        {statusLabels[appointment.status]}
+      </span>
+
+      <form action={updateAppointmentStatus} className="flex gap-2 lg:justify-end">
         <input type="hidden" name="appointment_id" value={appointment.id} />
-        <label className="grid gap-2 text-sm font-medium">
-          Status
-          <select
-            name="status"
-            defaultValue={appointment.status}
-            className="min-h-11 rounded-sm border border-line bg-surface px-3 text-base outline-none transition focus:border-accent"
-          >
-            {statusOptions.map((status) => (
-              <option key={status} value={status}>
-                {statusLabels[status]}
-              </option>
-            ))}
-          </select>
-        </label>
+        <select
+          name="status"
+          defaultValue={appointment.status}
+          aria-label="Αλλαγή status"
+          className="min-h-10 min-w-0 flex-1 rounded-sm border border-line bg-surface px-2 text-sm outline-none transition focus:border-accent lg:max-w-32"
+        >
+          {statusOptions.map((status) => (
+            <option key={status} value={status}>
+              {statusLabels[status]}
+            </option>
+          ))}
+        </select>
         <button
           type="submit"
-          className="min-h-11 rounded-sm bg-accent px-4 text-sm font-semibold text-surface transition hover:bg-foreground"
+          className="min-h-10 rounded-sm bg-accent px-3 text-xs font-semibold text-surface transition hover:bg-foreground"
         >
-          Αποθήκευση status
+          ΟΚ
         </button>
       </form>
     </article>
   );
-}
-
-function formatAppointmentRange(startAt: string, endAt: string) {
-  const date = formatInTimeZone(startAt, "Europe/Athens", "dd/MM/yyyy");
-  const start = formatInTimeZone(startAt, "Europe/Athens", "HH:mm");
-  const end = formatInTimeZone(endAt, "Europe/Athens", "HH:mm");
-
-  return `${date}, ${start}-${end}`;
 }
