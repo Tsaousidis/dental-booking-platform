@@ -129,6 +129,7 @@ export function BookingFlow({
   const [submitError, setSubmitError] = useState("");
   const [confirmedAppointmentId, setConfirmedAppointmentId] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
+  const [availabilityRefreshKey, setAvailabilityRefreshKey] = useState(0);
 
   const selectedType = useMemo(
     () => appointmentTypes.find((type) => type.id === selectedTypeId),
@@ -145,11 +146,25 @@ export function BookingFlow({
 
     let isActive = true;
 
-    fetch(`/api/booking/availability?appointmentTypeId=${selectedTypeId}`)
+    fetch(
+      `/api/booking/availability?appointmentTypeId=${selectedTypeId}&refresh=${availabilityRefreshKey}`,
+      { cache: "no-store" },
+    )
       .then((response) => response.json())
       .then((payload: { days?: AvailableDay[] }) => {
         if (isActive) {
-          setAvailableDays(payload.days ?? []);
+          const days = payload.days ?? [];
+
+          setAvailableDays(days);
+          setSelectedDate((currentDate) =>
+            currentDate && days.some((day) => day.date === currentDate) ? currentDate : "",
+          );
+          setSelectedSlotStart((currentSlot) =>
+            currentSlot &&
+            days.some((day) => day.slots.some((slot) => slot.startAt === currentSlot))
+              ? currentSlot
+              : "",
+          );
         }
       })
       .catch(() => {
@@ -165,6 +180,25 @@ export function BookingFlow({
 
     return () => {
       isActive = false;
+    };
+  }, [availabilityRefreshKey, selectedTypeId]);
+
+  useEffect(() => {
+    function refreshAvailability() {
+      if (document.visibilityState !== "visible" || !selectedTypeId) {
+        return;
+      }
+
+      setIsLoading(true);
+      setAvailabilityRefreshKey((key) => key + 1);
+    }
+
+    window.addEventListener("focus", refreshAvailability);
+    document.addEventListener("visibilitychange", refreshAvailability);
+
+    return () => {
+      window.removeEventListener("focus", refreshAvailability);
+      document.removeEventListener("visibilitychange", refreshAvailability);
     };
   }, [selectedTypeId]);
 

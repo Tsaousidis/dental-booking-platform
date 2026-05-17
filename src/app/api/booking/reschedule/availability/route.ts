@@ -40,5 +40,12 @@ export async function GET(request: Request) {
     excludeAppointmentId: data.id,
   });
 
-  return NextResponse.json({ days });
+  return NextResponse.json(
+    { days },
+    {
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    },
+  );
 }
