@@ -13,10 +13,10 @@ export function PublicPageShell({
 }) {
   return (
     <div className="bg-background">
-      <section className="border-b border-line bg-surface">
+      <section className="border-b border-line/30 bg-surface">
         <div className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
-          <p className="text-sm uppercase tracking-[0.22em] text-accent">{eyebrow}</p>
-          <h1 className="mt-5 max-w-4xl text-4xl font-semibold leading-tight sm:text-6xl">
+          <p className="label-caps text-accent">{eyebrow}</p>
+          <h1 className="mt-5 max-w-4xl text-4xl font-light leading-tight sm:text-6xl">
             {title}
           </h1>
           {intro ? (
