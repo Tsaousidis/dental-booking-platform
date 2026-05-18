@@ -46,6 +46,8 @@ export type AdminInsights = {
     cancelled: number;
     noShow: number;
   };
+  bookingTrend: InsightRow[];
+  statusBreakdown: InsightRow[];
   mostBookedServices: InsightRow[];
   busiestDays: InsightRow[];
   busiestHours: InsightRow[];
@@ -103,6 +105,13 @@ export async function getAdminInsights(): Promise<AdminInsights> {
       cancelled: countByStatus(appointments, "cancelled"),
       noShow: countByStatus(appointments, "no_show"),
     },
+    bookingTrend: buildBookingTrend(appointments),
+    statusBreakdown: [
+      { label: "Επιβεβαιωμένα", value: countByStatus(appointments, "confirmed") },
+      { label: "Ολοκληρωμένα", value: countByStatus(appointments, "completed") },
+      { label: "Ακυρωμένα", value: countByStatus(appointments, "cancelled") },
+      { label: "No-show", value: countByStatus(appointments, "no_show") },
+    ],
     mostBookedServices: topRows(
       appointments.map((appointment) => appointment.appointment_types?.name_el ?? "Άλλη θεραπεία"),
     ),
@@ -122,6 +131,33 @@ export async function getAdminInsights(): Promise<AdminInsights> {
 
 function countByStatus(appointments: RawInsightAppointment[], status: AppointmentStatus) {
   return appointments.filter((appointment) => appointment.status === status).length;
+}
+
+function buildBookingTrend(appointments: RawInsightAppointment[], days = 14): InsightRow[] {
+  const today = new Date();
+  const buckets = Array.from({ length: days }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (days - 1 - index));
+
+    return {
+      key: formatInTimeZone(date, TIMEZONE, "yyyy-MM-dd"),
+      label: formatInTimeZone(date, TIMEZONE, "dd/MM"),
+      value: 0,
+    };
+  });
+
+  const bucketByKey = new Map(buckets.map((bucket) => [bucket.key, bucket]));
+
+  appointments.forEach((appointment) => {
+    const key = formatInTimeZone(appointment.created_at, TIMEZONE, "yyyy-MM-dd");
+    const bucket = bucketByKey.get(key);
+
+    if (bucket) {
+      bucket.value += 1;
+    }
+  });
+
+  return buckets.map(({ label, value }) => ({ label, value }));
 }
 
 function topRows(values: (string | undefined)[], limit = 5): InsightRow[] {
