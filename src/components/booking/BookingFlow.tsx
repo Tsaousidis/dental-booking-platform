@@ -128,6 +128,7 @@ export function BookingFlow({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [confirmedAppointmentId, setConfirmedAppointmentId] = useState("");
+  const [confirmedSlot, setConfirmedSlot] = useState<AvailableSlot | null>(null);
   const [captchaToken, setCaptchaToken] = useState("");
   const [availabilityRefreshKey, setAvailabilityRefreshKey] = useState(0);
 
@@ -258,6 +259,7 @@ export function BookingFlow({
     }
 
     setConfirmedAppointmentId(payload.appointment.id);
+    setConfirmedSlot(selectedSlot);
     setIsSubmitting(false);
   }
 
@@ -345,7 +347,7 @@ export function BookingFlow({
               copy={copy}
               locale={locale}
               appointmentType={selectedType}
-              slot={selectedSlot}
+              slot={confirmedSlot ?? selectedSlot}
               patientName={patientName}
               patientEmail={patientEmail}
               patientPhone={patientPhone}
