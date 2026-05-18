@@ -367,7 +367,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
               <DeleteCheckbox name={`appointment_type_${type.id}_delete`} />
             </div>
           ))}
-          <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px]">
+          <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px]">
             <TextField
               label="Νέος τύπος στα Ελληνικά"
               name="new_appointment_type_name_el"
@@ -489,16 +489,16 @@ function NumberField({
   required?: boolean;
 }) {
   return (
-    <label className="grid gap-2 text-sm font-medium">
+    <label className="grid min-w-0 gap-2 text-sm font-medium">
       {label}
-      <span className="flex min-h-11 items-center rounded-sm border border-line bg-background focus-within:border-accent">
+      <span className="flex min-h-11 w-full min-w-0 items-center rounded-sm border border-line bg-background focus-within:border-accent">
         <input
           name={name}
           type="number"
           min={min}
           defaultValue={defaultValue ?? ""}
           required={required}
-          className="min-w-0 flex-1 bg-transparent px-3 text-base outline-none"
+          className="w-full min-w-0 flex-1 bg-transparent px-3 text-base outline-none"
         />
         {suffix ? <span className="pr-3 text-sm text-muted">{suffix}</span> : null}
       </span>
