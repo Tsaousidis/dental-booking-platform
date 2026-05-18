@@ -218,13 +218,17 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           title="Μη διαθέσιμες ώρες"
           description="Κλείστε χειροκίνητα ώρες ή ολόκληρα διαστήματα που δεν θέλετε να εμφανίζονται διαθέσιμα για online ραντεβού."
         />
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
+          Παράδειγμα: αν έχετε προσωπικό ραντεβού στις 22/05/2026 από 14:00 έως 16:00,
+          βάλτε αυτό το διάστημα εδώ για να μην μπορεί κάποιος να το κλείσει online.
+        </p>
         <div className="mt-6 grid gap-3">
           {blockedSlots.map((slot) => (
             <BlockedSlotRow key={slot.id} slot={slot} timezone={timezone} />
           ))}
-          <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[190px_190px_1fr_120px]">
-            <DateTimeField label="Μη διαθέσιμο από" name="new_blocked_start_at" required={false} />
-            <DateTimeField label="Μη διαθέσιμο έως" name="new_blocked_end_at" required={false} />
+          <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[1fr_1fr_1fr_120px]">
+            <BlockedDateTimeField label="Μη διαθέσιμο από" name="new_blocked_start_at" required={false} />
+            <BlockedDateTimeField label="Μη διαθέσιμο έως" name="new_blocked_end_at" required={false} />
             <TextField label="Αιτία" name="new_blocked_reason" defaultValue="" required={false} />
             <p className="flex items-end pb-3 text-sm text-muted">Προσθήκη με αποθήκευση</p>
           </div>
@@ -422,13 +426,13 @@ function BlockedSlotRow({
   timezone: string;
 }) {
   return (
-    <div className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[190px_190px_1fr_120px]">
-      <DateTimeField
+    <div className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[1fr_1fr_1fr_120px]">
+      <BlockedDateTimeField
         label="Από"
         name={`blocked_${slot.id}_start_at`}
         defaultValue={formatDateTime(slot.start_at, timezone)}
       />
-      <DateTimeField
+      <BlockedDateTimeField
         label="Έως"
         name={`blocked_${slot.id}_end_at`}
         defaultValue={formatDateTime(slot.end_at, timezone)}
@@ -644,7 +648,7 @@ function TimeSelectField({
   );
 }
 
-function DateTimeField({
+function BlockedDateTimeField({
   label,
   name,
   defaultValue = "",
@@ -655,17 +659,37 @@ function DateTimeField({
   defaultValue?: string;
   required?: boolean;
 }) {
+  const { date, time } = splitDateTimeValue(defaultValue);
+
   return (
-    <label className="grid gap-2 text-sm font-medium">
+    <fieldset className="grid gap-2 text-sm font-medium">
       {label}
-      <input
-        name={name}
-        type="datetime-local"
-        defaultValue={defaultValue}
-        required={required}
-        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
-      />
-    </label>
+      <div className="grid gap-2 sm:grid-cols-[1fr_120px]">
+        <input
+          name={`${name}_date`}
+          type="text"
+          inputMode="numeric"
+          placeholder="dd/mm/yyyy"
+          pattern="\\d{2}/\\d{2}/\\d{4}"
+          defaultValue={date}
+          required={required}
+          className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        />
+        <select
+          name={`${name}_time`}
+          defaultValue={time}
+          required={required}
+          className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        >
+          <option value="">--:--</option>
+          {timeSelectOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
+    </fieldset>
   );
 }
 
@@ -730,6 +754,20 @@ function ToggleField({
 
 function normalizeTime(value: string | null) {
   return value ? value.slice(0, 5) : "";
+}
+
+function splitDateTimeValue(value: string) {
+  if (!value) {
+    return { date: "", time: "" };
+  }
+
+  const [datePart, timePart = ""] = value.split("T");
+  const [year, month, day] = datePart.split("-");
+
+  return {
+    date: year && month && day ? `${day}/${month}/${year}` : "",
+    time: timePart.slice(0, 5),
+  };
 }
 
 function sortWeekday(dayOfWeek: number) {

@@ -381,8 +381,8 @@ async function updateBlockedSlot(formData: FormData, id: string, timezone: strin
   const { error } = await supabase
     .from("blocked_slots")
     .update({
-      start_at: toUtcIso(getRequiredValue(formData, `blocked_${id}_start_at`), timezone),
-      end_at: toUtcIso(getRequiredValue(formData, `blocked_${id}_end_at`), timezone),
+      start_at: toUtcIso(getDateTimeValue(formData, `blocked_${id}_start_at`), timezone),
+      end_at: toUtcIso(getDateTimeValue(formData, `blocked_${id}_end_at`), timezone),
       reason: getOptionalValue(formData, `blocked_${id}_reason`),
     })
     .eq("id", id);
@@ -391,22 +391,24 @@ async function updateBlockedSlot(formData: FormData, id: string, timezone: strin
 }
 
 async function createNewBlockedSlot(formData: FormData, timezone: string) {
-  const startAt = getOptionalValue(formData, "new_blocked_start_at");
-  const endAt = getOptionalValue(formData, "new_blocked_end_at");
+  const startDate = getOptionalValue(formData, "new_blocked_start_at_date");
+  const startTime = getOptionalValue(formData, "new_blocked_start_at_time");
+  const endDate = getOptionalValue(formData, "new_blocked_end_at_date");
+  const endTime = getOptionalValue(formData, "new_blocked_end_at_time");
   const reason = getOptionalValue(formData, "new_blocked_reason");
 
-  if (!startAt && !endAt && !reason) {
+  if (!startDate && !startTime && !endDate && !endTime && !reason) {
     return;
   }
 
-  if (!startAt || !endAt) {
-    throw new Error("Για νέο block συμπληρώστε έναρξη και λήξη.");
+  if (!startDate || !startTime || !endDate || !endTime) {
+    throw new Error("Για νέο μη διαθέσιμο διάστημα συμπληρώστε ημερομηνία και ώρα έναρξης/λήξης.");
   }
 
   const supabase = await createClient();
   const { error } = await supabase.from("blocked_slots").insert({
-    start_at: toUtcIso(startAt, timezone),
-    end_at: toUtcIso(endAt, timezone),
+    start_at: toUtcIso(toLocalDateTime(startDate, startTime), timezone),
+    end_at: toUtcIso(toLocalDateTime(endDate, endTime), timezone),
     reason,
   });
 
@@ -428,6 +430,31 @@ function getRequiredValue(formData: FormData, key: string) {
   }
 
   return value;
+}
+
+function getDateTimeValue(formData: FormData, key: string) {
+  const existingValue = getOptionalValue(formData, key);
+
+  if (existingValue) {
+    return existingValue;
+  }
+
+  return toLocalDateTime(
+    getRequiredValue(formData, `${key}_date`),
+    getRequiredValue(formData, `${key}_time`),
+  );
+}
+
+function toLocalDateTime(date: string, time: string) {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(date);
+
+  if (!match) {
+    throw new Error("Η ημερομηνία πρέπει να είναι στη μορφή dd/mm/yyyy.");
+  }
+
+  const [, day, month, year] = match;
+
+  return `${year}-${month}-${day}T${time}`;
 }
 
 function getOptionalValue(formData: FormData, key: string) {
