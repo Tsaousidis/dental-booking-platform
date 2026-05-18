@@ -236,6 +236,7 @@ export async function saveAdminSettings(formData: FormData) {
     ...blockedSlotIds.map((id) => updateBlockedSlot(formData, id, timezone)),
   ]);
 
+  await createNewAppointmentType(formData);
   await createNewScheduleBreak(formData);
   await createNewBlockedSlot(formData, timezone);
 
@@ -257,6 +258,40 @@ async function updateAppointmentType(formData: FormData, id: string) {
       is_active: formData.get(`appointment_type_${id}_is_active`) === "on",
     })
     .eq("id", id);
+
+  throwIfSupabaseError(error);
+}
+
+async function createNewAppointmentType(formData: FormData) {
+  const nameEl = getOptionalValue(formData, "new_appointment_type_name_el");
+  const nameEn = getOptionalValue(formData, "new_appointment_type_name_en");
+  const duration = getOptionalValue(formData, "new_appointment_type_duration_minutes");
+
+  if (!nameEl && !nameEn && !duration) {
+    return;
+  }
+
+  if (!nameEl || !nameEn || !duration) {
+    throw new Error("Για νέο τύπο ραντεβού συμπληρώστε όνομα στα Ελληνικά, όνομα στα Αγγλικά και διάρκεια.");
+  }
+
+  const supabase = await createClient();
+  const { data: lastAppointmentType, error: lastAppointmentTypeError } = await supabase
+    .from("appointment_types")
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  throwIfSupabaseError(lastAppointmentTypeError);
+
+  const { error } = await supabase.from("appointment_types").insert({
+    name_el: nameEl,
+    name_en: nameEn,
+    duration_minutes: getPositiveInteger(formData, "new_appointment_type_duration_minutes"),
+    is_active: true,
+    sort_order: (lastAppointmentType?.sort_order ?? 0) + 10,
+  });
 
   throwIfSupabaseError(error);
 }

@@ -325,14 +325,19 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
       <section className="border border-line bg-surface p-6">
         <SectionHeader
           title="Τύποι ραντεβού"
-          description="Επεξεργασία ονομάτων θεραπείας, διάρκειας, ενεργής κατάστασης και σειράς εμφάνισης."
+          description="Επεξεργασία ονομάτων θεραπείας, διάρκειας και ενεργής κατάστασης. Η σειρά εμφάνισης κρατιέται αυτόματα με βάση τη λίστα."
         />
         <div className="mt-6 grid gap-4">
           {appointmentTypes.map((type) => (
             <div
               key={type.id}
-              className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px_120px_120px]"
+              className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px_120px]"
             >
+              <input
+                type="hidden"
+                name={`appointment_type_${type.id}_sort_order`}
+                value={type.sort_order}
+              />
               <TextField
                 label="Όνομα στα Ελληνικά"
                 name={`appointment_type_${type.id}_name_el`}
@@ -350,12 +355,6 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
                 min={1}
                 suffix="min"
               />
-              <NumberField
-                label="Σειρά"
-                name={`appointment_type_${type.id}_sort_order`}
-                defaultValue={type.sort_order}
-                min={0}
-              />
               <label className="flex items-end gap-3 pb-3 text-sm font-medium">
                 <input
                   type="checkbox"
@@ -367,6 +366,30 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
               </label>
             </div>
           ))}
+          <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px_160px]">
+            <TextField
+              label="Νέος τύπος στα Ελληνικά"
+              name="new_appointment_type_name_el"
+              defaultValue=""
+              required={false}
+            />
+            <TextField
+              label="Νέος τύπος στα Αγγλικά"
+              name="new_appointment_type_name_en"
+              defaultValue=""
+              required={false}
+            />
+            <NumberField
+              label="Διάρκεια"
+              name="new_appointment_type_duration_minutes"
+              min={1}
+              suffix="min"
+              required={false}
+            />
+            <p className="flex items-end pb-3 text-sm text-muted">
+              Προσθήκη με αποθήκευση
+            </p>
+          </div>
         </div>
       </section>
 
@@ -455,12 +478,14 @@ function NumberField({
   defaultValue,
   min,
   suffix,
+  required = true,
 }: {
   label: string;
   name: string;
-  defaultValue: number;
+  defaultValue?: number;
   min: number;
   suffix?: string;
+  required?: boolean;
 }) {
   return (
     <label className="grid gap-2 text-sm font-medium">
@@ -470,8 +495,8 @@ function NumberField({
           name={name}
           type="number"
           min={min}
-          defaultValue={defaultValue}
-          required
+          defaultValue={defaultValue ?? ""}
+          required={required}
           className="min-w-0 flex-1 bg-transparent px-3 text-base outline-none"
         />
         {suffix ? <span className="pr-3 text-sm text-muted">{suffix}</span> : null}
