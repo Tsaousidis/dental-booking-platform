@@ -176,8 +176,8 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
 
       <section className="border border-line bg-surface p-6">
         <SectionHeader
-          title="Κανόνες booking"
-          description="Κανόνες που χρησιμοποιεί το availability engine πριν επιβεβαιωθεί ένα ραντεβού."
+          title="Κανόνες κρατήσεων"
+          description="Ρυθμίσεις που καθορίζουν πότε μπορεί ένας ασθενής να κλείσει ραντεβού online."
         />
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <NumberField
@@ -186,6 +186,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
             defaultValue={bookingSettings.booking_horizon_days}
             min={1}
             suffix="μέρες"
+            description="Πόσο μακριά στο μέλλον θα βλέπει διαθέσιμες ημέρες ο ασθενής. Π.χ. 60 σημαίνει ότι μπορεί να κλείσει μέσα στις επόμενες 60 ημέρες."
           />
           <NumberField
             label="Κενό ανάμεσα στα ραντεβού"
@@ -193,6 +194,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
             defaultValue={bookingSettings.buffer_minutes}
             min={0}
             suffix="λεπτά"
+            description="Χρόνος που μένει κενός μετά από κάθε ραντεβού για προετοιμασία, καθαρισμό ή μικρή καθυστέρηση."
           />
           <NumberField
             label="Ελάχιστη προειδοποίηση"
@@ -200,11 +202,13 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
             defaultValue={bookingSettings.min_notice_hours}
             min={0}
             suffix="ώρες"
+            description="Πόσες ώρες νωρίτερα πρέπει να κλείσει κάποιος. Π.χ. 12 σημαίνει ότι δεν μπορεί να κλείσει ραντεβού για τις επόμενες 12 ώρες."
           />
-          <TextField
+          <TimezoneSelectField
             label="Ζώνη ώρας booking"
             name="booking_timezone"
             defaultValue={bookingSettings.timezone}
+            description="Η ώρα με την οποία υπολογίζονται και εμφανίζονται τα online ραντεβού. Για Ελλάδα κρατήστε Europe/Athens."
           />
         </div>
       </section>
@@ -482,6 +486,7 @@ function NumberField({
   defaultValue,
   min,
   suffix,
+  description,
   required = true,
 }: {
   label: string;
@@ -489,6 +494,7 @@ function NumberField({
   defaultValue?: number;
   min: number;
   suffix?: string;
+  description?: string;
   required?: boolean;
 }) {
   return (
@@ -505,6 +511,71 @@ function NumberField({
         />
         {suffix ? <span className="pr-3 text-sm text-muted">{suffix}</span> : null}
       </span>
+      {description ? <span className="text-xs leading-5 text-muted">{description}</span> : null}
+    </label>
+  );
+}
+
+const fallbackTimeZones = [
+  "Europe/Athens",
+  "Europe/London",
+  "Europe/Paris",
+  "Europe/Berlin",
+  "Europe/Rome",
+  "Europe/Madrid",
+  "Europe/Amsterdam",
+  "Europe/Brussels",
+  "Europe/Vienna",
+  "Europe/Zurich",
+  "Europe/Sofia",
+  "Europe/Bucharest",
+  "Europe/Istanbul",
+  "UTC",
+];
+
+const supportedTimeZones =
+  "supportedValuesOf" in Intl
+    ? (Intl as typeof Intl & { supportedValuesOf: (input: "timeZone") => string[] }).supportedValuesOf(
+        "timeZone",
+      )
+    : fallbackTimeZones;
+
+const timezoneOptions = [
+  "Europe/Athens",
+  ...supportedTimeZones.filter((timezone) => timezone !== "Europe/Athens").sort(),
+];
+
+function TimezoneSelectField({
+  label,
+  name,
+  defaultValue,
+  description,
+}: {
+  label: string;
+  name: string;
+  defaultValue: string;
+  description?: string;
+}) {
+  const options = timezoneOptions.includes(defaultValue)
+    ? timezoneOptions
+    : [defaultValue, ...timezoneOptions];
+
+  return (
+    <label className="grid gap-2 text-sm font-medium">
+      {label}
+      <select
+        name={name}
+        defaultValue={defaultValue}
+        required
+        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+      >
+        {options.map((timezone) => (
+          <option key={timezone} value={timezone}>
+            {timezone}
+          </option>
+        ))}
+      </select>
+      {description ? <span className="text-xs leading-5 text-muted">{description}</span> : null}
     </label>
   );
 }
