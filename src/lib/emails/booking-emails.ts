@@ -52,17 +52,30 @@ export async function sendPatientBookingConfirmation(input: BookingEmailInput) {
         [isGreek ? "Θεραπεία" : "Treatment", input.appointmentTypeName],
         [isGreek ? "Ημερομηνία / ώρα" : "Date / time", appointmentTime],
         [isGreek ? "Κλινική" : "Clinic", input.clinicName],
-        ...(input.cancelUrl
-          ? ([[isGreek ? "Ακύρωση" : "Cancellation", input.cancelUrl]] as Array<
-              [string, string]
-            >)
-          : []),
+      ],
+      actions: [
         ...(input.rescheduleUrl
-          ? ([[isGreek ? "Αλλαγή ώρας" : "Reschedule", input.rescheduleUrl]] as Array<
-              [string, string]
-            >)
+          ? [
+              {
+                label: isGreek ? "Αλλαγή ώρας" : "Reschedule appointment",
+                href: input.rescheduleUrl,
+                variant: "primary" as const,
+              },
+            ]
+          : []),
+        ...(input.cancelUrl
+          ? [
+              {
+                label: isGreek ? "Ακύρωση ραντεβού" : "Cancel appointment",
+                href: input.cancelUrl,
+                variant: "secondary" as const,
+              },
+            ]
           : []),
       ],
+      actionsIntro: isGreek
+        ? "Χρησιμοποιήστε τους παρακάτω ασφαλείς συνδέσμους για αλλαγές στο ραντεβού."
+        : "Use the secure links below to make changes to your appointment.",
     }),
     text: [
       greeting,
@@ -366,11 +379,19 @@ function emailHtml({
   greeting,
   body,
   rows,
+  actions = [],
+  actionsIntro,
 }: {
   title: string;
   greeting: string;
   body: string;
   rows: Array<[string, string]>;
+  actions?: Array<{
+    label: string;
+    href: string;
+    variant?: "primary" | "secondary";
+  }>;
+  actionsIntro?: string;
 }) {
   const rowsHtml = rows
     .map(
@@ -382,6 +403,26 @@ function emailHtml({
       `,
     )
     .join("");
+  const actionsHtml =
+    actions.length > 0
+      ? `
+        <div style="margin-top:28px;padding-top:24px;border-top:1px solid #e7e0d7;">
+          ${actionsIntro ? `<p style="margin:0 0 14px;color:#6f746f;font-size:14px;line-height:1.6;">${escapeHtml(actionsIntro)}</p>` : ""}
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            ${actions
+              .map((action) => {
+                const isPrimary = action.variant !== "secondary";
+                const style = isPrimary
+                  ? "display:inline-block;background:#685c52;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:2px;font-size:14px;font-weight:700;"
+                  : "display:inline-block;background:#ffffff;color:#685c52;text-decoration:none;padding:11px 17px;border:1px solid #d0c4bc;border-radius:2px;font-size:14px;font-weight:700;";
+
+                return `<a href="${escapeHtml(action.href)}" style="${style}">${escapeHtml(action.label)}</a>`;
+              })
+              .join("")}
+          </div>
+        </div>
+      `
+      : "";
 
   return `
     <div style="background:#fbfaf8;padding:32px;font-family:Arial,sans-serif;color:#171717;">
@@ -390,6 +431,7 @@ function emailHtml({
         <h1 style="margin:0 0 20px;font-size:28px;line-height:1.2;">${escapeHtml(greeting)}</h1>
         <p style="margin:0 0 24px;color:#6f746f;font-size:16px;line-height:1.6;">${escapeHtml(body)}</p>
         <table style="width:100%;border-collapse:collapse;">${rowsHtml}</table>
+        ${actionsHtml}
       </div>
     </div>
   `;
