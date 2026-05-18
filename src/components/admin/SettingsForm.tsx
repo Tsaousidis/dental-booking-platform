@@ -186,7 +186,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
             defaultValue={bookingSettings.booking_horizon_days}
             min={1}
             suffix="μέρες"
-            description="Πόσο μακριά στο μέλλον θα βλέπει διαθέσιμες ημέρες ο ασθενής. Π.χ. 60 σημαίνει ότι μπορεί να κλείσει μέσα στις επόμενες 60 ημέρες."
+            description="Πόσο μακριά στο μέλλον θα βλέπει διαθέσιμες ημέρες ο ασθενής. Π.χ. 60 σημαίνει ότι μπορεί να κλείσει ραντεβού μέσα στις επόμενες 60 ημέρες."
           />
           <NumberField
             label="Κενό ανάμεσα στα ραντεβού"
@@ -215,16 +215,16 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
 
       <section className="border border-line bg-surface p-6">
         <SectionHeader
-          title="Blocked slots"
-          description="Χειροκίνητο μπλοκάρισμα συγκεκριμένης ώρας ή ημέρας, χωρίς fake appointments."
+          title="Μη διαθέσιμες ώρες"
+          description="Κλείστε χειροκίνητα ώρες ή ολόκληρα διαστήματα που δεν θέλετε να εμφανίζονται διαθέσιμα για online ραντεβού."
         />
         <div className="mt-6 grid gap-3">
           {blockedSlots.map((slot) => (
             <BlockedSlotRow key={slot.id} slot={slot} timezone={timezone} />
           ))}
           <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[190px_190px_1fr_120px]">
-            <DateTimeField label="Νέο block από" name="new_blocked_start_at" required={false} />
-            <DateTimeField label="Νέο block έως" name="new_blocked_end_at" required={false} />
+            <DateTimeField label="Μη διαθέσιμο από" name="new_blocked_start_at" required={false} />
+            <DateTimeField label="Μη διαθέσιμο έως" name="new_blocked_end_at" required={false} />
             <TextField label="Αιτία" name="new_blocked_reason" defaultValue="" required={false} />
             <p className="flex items-end pb-3 text-sm text-muted">Προσθήκη με αποθήκευση</p>
           </div>
