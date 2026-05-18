@@ -331,7 +331,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           {appointmentTypes.map((type) => (
             <div
               key={type.id}
-              className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px_120px]"
+              className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px_120px_120px]"
             >
               <input
                 type="hidden"
@@ -364,9 +364,10 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
                 />
                 Ενεργό
               </label>
+              <DeleteCheckbox name={`appointment_type_${type.id}_delete`} />
             </div>
           ))}
-          <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px_160px]">
+          <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px]">
             <TextField
               label="Νέος τύπος στα Ελληνικά"
               name="new_appointment_type_name_el"
@@ -386,7 +387,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
               suffix="min"
               required={false}
             />
-            <p className="flex items-end pb-3 text-sm text-muted">
+            <p className="text-sm text-muted lg:col-span-3">
               Προσθήκη με αποθήκευση
             </p>
           </div>

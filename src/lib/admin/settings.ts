@@ -245,6 +245,13 @@ export async function saveAdminSettings(formData: FormData) {
 
 async function updateAppointmentType(formData: FormData, id: string) {
   const supabase = await createClient();
+
+  if (formData.get(`appointment_type_${id}_delete`) === "on") {
+    const { error } = await supabase.from("appointment_types").delete().eq("id", id);
+    throwIfSupabaseError(error);
+    return;
+  }
+
   const { error } = await supabase
     .from("appointment_types")
     .update({
