@@ -43,6 +43,9 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
   }
 
   const timezone = bookingSettings.timezone || "Europe/Athens";
+  const orderedDoctorSchedule = [...doctorSchedule].sort(
+    (left, right) => sortWeekday(left.day_of_week) - sortWeekday(right.day_of_week),
+  );
 
   return (
     <form action={saveAdminSettings} className="grid gap-6">
@@ -98,7 +101,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           description="Ορίζει ποιες ημέρες δέχεται ραντεβού ο γιατρός και μέσα σε ποιο ωράριο."
         />
         <div className="mt-6 grid gap-3">
-          {doctorSchedule.map((day) => (
+          {orderedDoctorSchedule.map((day) => (
             <div
               key={day.id}
               className="grid gap-4 border border-line bg-background p-4 md:grid-cols-[1fr_130px_130px_120px]"
@@ -617,6 +620,10 @@ function ToggleField({
 
 function normalizeTime(value: string | null) {
   return value ? value.slice(0, 5) : "";
+}
+
+function sortWeekday(dayOfWeek: number) {
+  return dayOfWeek === 0 ? 7 : dayOfWeek;
 }
 
 function formatDateTime(value: string, timezone: string) {
