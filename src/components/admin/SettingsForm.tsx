@@ -152,12 +152,12 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
                 name={`break_${item.id}_day_of_week`}
                 defaultValue={String(item.day_of_week)}
               />
-              <TimeField
+              <TimeSelectField
                 label="Έναρξη"
                 name={`break_${item.id}_start_time`}
                 defaultValue={normalizeTime(item.start_time)}
               />
-              <TimeField
+              <TimeSelectField
                 label="Λήξη"
                 name={`break_${item.id}_end_time`}
                 defaultValue={normalizeTime(item.end_time)}
@@ -167,8 +167,8 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           ))}
           <div className="grid gap-4 border border-dashed border-line bg-background p-4 md:grid-cols-[1fr_130px_130px_120px]">
             <SelectField label="Νέο διάλειμμα" name="new_break_day_of_week" />
-            <TimeField label="Έναρξη" name="new_break_start_time" required={false} />
-            <TimeField label="Λήξη" name="new_break_end_time" required={false} />
+            <TimeSelectField label="Έναρξη" name="new_break_start_time" required={false} />
+            <TimeSelectField label="Λήξη" name="new_break_end_time" required={false} />
             <p className="flex items-end pb-3 text-sm text-muted">Προσθήκη με αποθήκευση</p>
           </div>
         </div>
@@ -530,6 +530,45 @@ function TimeField({
         required={required}
         className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
       />
+    </label>
+  );
+}
+
+const timeSelectOptions = Array.from({ length: 24 * 4 }, (_, index) => {
+  const totalMinutes = index * 15;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+});
+
+function TimeSelectField({
+  label,
+  name,
+  defaultValue = "",
+  required = true,
+}: {
+  label: string;
+  name: string;
+  defaultValue?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="grid gap-2 text-sm font-medium">
+      {label}
+      <select
+        name={name}
+        defaultValue={defaultValue}
+        required={required}
+        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+      >
+        <option value="">--:--</option>
+        {timeSelectOptions.map((time) => (
+          <option key={time} value={time}>
+            {time}
+          </option>
+        ))}
+      </select>
     </label>
   );
 }
