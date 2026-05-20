@@ -2,6 +2,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { Save } from "lucide-react";
 import Link from "next/link";
 
+import { AppointmentTypesOrderList } from "@/components/admin/AppointmentTypesOrderList";
 import {
   type AdminSettingsData,
   type BlockedSlot,
@@ -78,7 +79,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
       <section className="border border-line bg-surface p-6">
         <SectionHeader
           title="Προφίλ κλινικής"
-          description="Βασικά rebrandable στοιχεία που χρησιμοποιούνται στην ιστοσελίδα και στα emails."
+          description="Βασικά στοιχεία που χρησιμοποιούνται στην ιστοσελίδα και στα emails."
         />
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <TextField label="Όνομα γιατρού" name="doctor_name" defaultValue={doctorProfile.doctor_name} />
@@ -98,7 +99,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
       <section className="border border-line bg-surface p-6">
         <SectionHeader
           title="Εργάσιμες ώρες"
-          description="Ορίζει ποιες ημέρες δέχεται ραντεβού ο γιατρός και μέσα σε ποιο ωράριο."
+          description="Εργάσιμες ημέρες και ώρες."
         />
         <div className="mt-6 grid gap-3">
           {orderedDoctorSchedule.map((day) => (
@@ -139,7 +140,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
       <section className="border border-line bg-surface p-6">
         <SectionHeader
           title="Διαλείμματα"
-          description="Αφαιρούνται από τη διαθεσιμότητα χωρίς να δημιουργούνται fake ραντεβού."
+          description="Αφαιρούνται από τη διαθεσιμότητα και δεν επιτρέπουν κράτηση."
         />
         <div className="mt-6 grid gap-3">
           {scheduleBreaks.map((item) => (
@@ -295,11 +296,12 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
             </div>
 
             <NumberField
-              label="Πότε στέλνεται reminder"
+              label="Πότε στέλνεται υπενθύμιση"
               name="reminder_hours_before"
               defaultValue={notificationSettings.reminder_hours_before}
               min={1}
               suffix="ώρες πριν"
+              compact
             />
           </div>
         </section>
@@ -338,46 +340,8 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           title="Τύποι ραντεβού"
           description="Επεξεργασία ονομάτων θεραπείας, διάρκειας και ενεργής κατάστασης. Η σειρά εμφάνισης κρατιέται αυτόματα με βάση τη λίστα."
         />
-        <div className="mt-6 grid gap-4">
-          {appointmentTypes.map((type) => (
-            <div
-              key={type.id}
-              className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[1fr_1fr_150px_120px_120px]"
-            >
-              <input
-                type="hidden"
-                name={`appointment_type_${type.id}_sort_order`}
-                value={type.sort_order}
-              />
-              <TextField
-                label="Όνομα στα Ελληνικά"
-                name={`appointment_type_${type.id}_name_el`}
-                defaultValue={type.name_el}
-              />
-              <TextField
-                label="Όνομα στα Αγγλικά"
-                name={`appointment_type_${type.id}_name_en`}
-                defaultValue={type.name_en}
-              />
-              <NumberField
-                label="Διάρκεια"
-                name={`appointment_type_${type.id}_duration_minutes`}
-                defaultValue={type.duration_minutes}
-                min={1}
-                suffix="min"
-              />
-              <label className="flex items-end gap-3 pb-3 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  name={`appointment_type_${type.id}_is_active`}
-                  defaultChecked={type.is_active}
-                  className="h-5 w-5 accent-[var(--accent)]"
-                />
-                Ενεργό
-              </label>
-              <DeleteCheckbox name={`appointment_type_${type.id}_delete`} />
-            </div>
-          ))}
+        <AppointmentTypesOrderList appointmentTypes={appointmentTypes} />
+        <div className="mt-4 grid gap-4">
           <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px]">
             <TextField
               label="Νέος τύπος στα Ελληνικά"
@@ -491,6 +455,7 @@ function NumberField({
   min,
   suffix,
   description,
+  compact = false,
   required = true,
 }: {
   label: string;
@@ -499,19 +464,26 @@ function NumberField({
   min: number;
   suffix?: string;
   description?: string;
+  compact?: boolean;
   required?: boolean;
 }) {
   return (
     <label className="grid min-w-0 gap-2 text-sm font-medium">
       {label}
-      <span className="flex min-h-11 w-full min-w-0 items-center rounded-sm border border-line bg-background focus-within:border-accent">
+      <span
+        className={`flex min-h-11 min-w-0 items-center rounded-sm border border-line bg-background focus-within:border-accent ${
+          compact ? "w-fit" : "w-full"
+        }`}
+      >
         <input
           name={name}
           type="number"
           min={min}
           defaultValue={defaultValue ?? ""}
           required={required}
-          className="w-full min-w-0 flex-1 bg-transparent px-3 text-base outline-none"
+          className={`min-w-0 bg-transparent px-3 text-base outline-none ${
+            compact ? "w-16 flex-none" : "w-full flex-1"
+          }`}
         />
         {suffix ? <span className="pr-3 text-sm text-muted">{suffix}</span> : null}
       </span>
