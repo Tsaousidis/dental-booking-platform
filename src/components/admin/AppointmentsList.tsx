@@ -94,22 +94,35 @@ function AppointmentRow({ appointment }: { appointment: AdminAppointment }) {
   const treatment = appointment.appointment_types?.name_el ?? "Άλλη θεραπεία";
 
   return (
-    <article className="grid gap-4 px-5 py-4 transition hover:bg-surface-low lg:grid-cols-[90px_110px_1.2fr_1fr_130px_170px] lg:items-center">
-      <p className="text-sm font-semibold text-foreground">{date}</p>
-      <p className="text-sm font-semibold text-accent">{timeRange}</p>
+    <article className="grid grid-cols-2 gap-x-4 gap-y-3 px-5 py-4 transition hover:bg-surface-low lg:grid-cols-[90px_110px_1.2fr_1fr_130px_170px] lg:items-center lg:gap-4">
+      <div>
+        <p className="label-caps mb-1 text-[10px] text-muted lg:hidden">Ημερομηνία</p>
+        <p className="text-sm font-semibold text-foreground">{date}</p>
+      </div>
+      <div>
+        <p className="label-caps mb-1 text-[10px] text-muted lg:hidden">Ώρα</p>
+        <p className="text-sm font-semibold text-accent">{timeRange}</p>
+      </div>
 
       <div className="min-w-0">
+        <p className="label-caps mb-1 text-[10px] text-muted lg:hidden">Ασθενής</p>
         <p className="truncate text-sm font-semibold">{appointment.patient_name}</p>
         <p className="mt-1 truncate text-xs text-muted">{appointment.patient_phone}</p>
       </div>
 
-      <p className="truncate text-sm text-muted">{treatment}</p>
+      <div className="min-w-0">
+        <p className="label-caps mb-1 text-[10px] text-muted lg:hidden">Θεραπεία</p>
+        <p className="truncate text-sm text-muted">{treatment}</p>
+      </div>
 
-      <span
-        className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[appointment.status]}`}
-      >
-        {statusLabels[appointment.status]}
-      </span>
+      <div>
+        <p className="label-caps mb-1 text-[10px] text-muted lg:hidden">Status</p>
+        <span
+          className={`inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold ${statusStyles[appointment.status]}`}
+        >
+          {statusLabels[appointment.status]}
+        </span>
+      </div>
 
       <form action={updateAppointmentStatus} className="flex gap-2 lg:justify-end">
         <input type="hidden" name="appointment_id" value={appointment.id} />

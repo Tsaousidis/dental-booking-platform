@@ -38,9 +38,9 @@ export function AdminShell({
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[240px_1fr]">
-        <aside className="lg:sticky lg:top-28 lg:self-start">
-          <nav className="grid gap-2">
+      <div className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-8 sm:px-8 xl:grid-cols-[220px_1fr]">
+        <aside className="min-w-0 xl:sticky xl:top-28 xl:self-start">
+          <nav className="flex gap-2 overflow-x-auto pb-1 xl:grid xl:overflow-visible xl:pb-0">
             {adminNav.map((item) => {
               const Icon = item.icon;
 
@@ -48,7 +48,7 @@ export function AdminShell({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex min-h-12 items-center gap-3 rounded-lg border border-line/50 bg-surface px-4 text-sm font-medium ambient-shadow transition hover:-translate-y-0.5 hover:border-champagne"
+                  className="flex min-h-12 shrink-0 items-center gap-3 rounded-lg border border-line/50 bg-surface px-4 text-sm font-medium ambient-shadow transition hover:-translate-y-0.5 hover:border-champagne xl:shrink"
                 >
                   <Icon size={18} className="text-accent" aria-hidden="true" />
                   {item.label}
