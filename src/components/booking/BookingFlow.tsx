@@ -502,8 +502,11 @@ function StepDay({
           </div>
 
           <div className="grid grid-cols-7 gap-1 text-center">
-            {getWeekdayLabels(locale).map((label) => (
-              <div key={label} className="label-caps py-2 text-muted">
+            {getWeekdayLabels(locale).map((label, index) => (
+              <div
+                key={label}
+                className={`label-caps py-2 ${index >= 5 ? "text-muted/70" : "text-muted"}`}
+              >
                 {label}
               </div>
             ))}
@@ -526,8 +529,12 @@ function StepDay({
                     isSelected
                       ? "border-accent bg-accent text-surface"
                       : isAvailable
-                        ? "border-line bg-background text-foreground hover:border-accent hover:bg-surface-low"
-                        : "border-transparent bg-transparent text-muted/35"
+                        ? cell.isWeekend
+                          ? "border-line bg-surface-low/70 text-muted hover:border-accent hover:bg-surface-low hover:text-foreground"
+                          : "border-line bg-background text-foreground hover:border-accent hover:bg-surface-low"
+                        : cell.isWeekend
+                          ? "border-line/40 bg-surface-low/55 text-muted/45"
+                          : "border-transparent bg-transparent text-muted/35"
                   }`}
                 >
                   <span className="block font-semibold">{cell.dayNumber}</span>
@@ -557,7 +564,7 @@ function buildCalendarCells(monthKey: string) {
   const firstDay = new Date(year, month - 1, 1, 12);
   const lastDay = new Date(year, month, 0, 12);
   const leadingEmptyCells = (firstDay.getDay() + 6) % 7;
-  const cells: Array<{ date: string; dayNumber: number } | null> = Array.from(
+  const cells: Array<{ date: string; dayNumber: number; isWeekend: boolean } | null> = Array.from(
     { length: leadingEmptyCells },
     () => null,
   );
@@ -567,6 +574,7 @@ function buildCalendarCells(monthKey: string) {
     cells.push({
       date: formatLocalDate(date),
       dayNumber: day,
+      isWeekend: date.getDay() === 0 || date.getDay() === 6,
     });
   }
 
