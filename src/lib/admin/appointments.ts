@@ -2,7 +2,8 @@ import "server-only";
 
 import { revalidatePath } from "next/cache";
 
-import { createAuthorizedAdminClient } from "./auth";
+import { writeAdminAuditLog } from "./audit-log";
+import { createAuthorizedAdminClient, createAuthorizedAdminContext } from "./auth";
 
 export type AppointmentStatus = "confirmed" | "completed" | "cancelled" | "no_show";
 
@@ -70,7 +71,13 @@ export async function updateAppointmentStatus(formData: FormData) {
     throw new Error("Μη έγκυρη αλλαγή status.");
   }
 
-  const supabase = await createAuthorizedAdminClient();
+  const { supabase, user } = await createAuthorizedAdminContext();
+  const { data: currentAppointment } = await supabase
+    .from("appointments")
+    .select("status")
+    .eq("id", id)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("appointments")
     .update({ status })
@@ -79,6 +86,17 @@ export async function updateAppointmentStatus(formData: FormData) {
   if (error) {
     throw new Error(error.message);
   }
+
+  await writeAdminAuditLog({
+    adminEmail: user.email,
+    action: "appointment_status_updated",
+    entityType: "appointment",
+    entityId: id,
+    metadata: {
+      previous_status: currentAppointment?.status ?? null,
+      new_status: status,
+    },
+  });
 
   revalidatePath("/admin/appointments");
 }

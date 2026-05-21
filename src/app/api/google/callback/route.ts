@@ -2,8 +2,10 @@ import { google } from "googleapis";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { writeAdminAuditLog } from "@/lib/admin/audit-log";
 import { createGoogleOAuthClient } from "@/lib/google-calendar/client";
 import { requireAdminUser } from "@/lib/admin/auth";
+import { sendGoogleCalendarConnectedAlert } from "@/lib/emails/admin-security-emails";
 import { encryptSecret } from "@/lib/security/encryption";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -16,8 +18,10 @@ export async function GET(request: Request) {
 
   cookieStore.delete("google_oauth_state");
 
+  let adminUser;
+
   try {
-    await requireAdminUser();
+    adminUser = await requireAdminUser();
   } catch {
     return NextResponse.redirect(new URL("/admin/login", url.origin));
   }
@@ -50,6 +54,31 @@ export async function GET(request: Request) {
     calendar_id: "primary",
     is_connected: true,
   });
+
+  await writeAdminAuditLog({
+    adminEmail: adminUser.email,
+    action: "google_calendar_connected",
+    entityType: "google_calendar_connection",
+    metadata: {
+      google_account_email: userInfo.data.email ?? null,
+    },
+  });
+
+  const { data: doctorProfile } = await supabase
+    .from("doctor_profile")
+    .select("clinic_name,email")
+    .order("created_at")
+    .limit(1)
+    .maybeSingle();
+
+  if (doctorProfile?.email) {
+    await sendGoogleCalendarConnectedAlert({
+      doctorEmail: doctorProfile.email,
+      clinicName: doctorProfile.clinic_name ?? "Dental Clinic",
+      adminEmail: adminUser.email,
+      googleAccountEmail: userInfo.data.email ?? null,
+    }).catch(() => null);
+  }
 
   return NextResponse.redirect(new URL("/admin/settings?google=connected", url.origin));
 }

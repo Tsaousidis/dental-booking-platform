@@ -3,7 +3,8 @@ import "server-only";
 import { fromZonedTime } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
 
-import { createAuthorizedAdminClient } from "./auth";
+import { writeAdminAuditLog } from "./audit-log";
+import { createAuthorizedAdminClient, createAuthorizedAdminContext } from "./auth";
 
 const DEFAULT_TIMEZONE = "Europe/Athens";
 
@@ -158,7 +159,7 @@ export async function getAdminSettings(): Promise<AdminSettingsData> {
 export async function saveAdminSettings(formData: FormData) {
   "use server";
 
-  const supabase = await createAuthorizedAdminClient();
+  const { supabase, user } = await createAuthorizedAdminContext();
 
   const doctorProfileId = getRequiredValue(formData, "doctor_profile_id");
   const bookingSettingsId = getRequiredValue(formData, "booking_settings_id");
@@ -239,6 +240,18 @@ export async function saveAdminSettings(formData: FormData) {
   await createNewAppointmentType(formData);
   await createNewScheduleBreak(formData);
   await createNewBlockedSlot(formData, timezone);
+
+  await writeAdminAuditLog({
+    adminEmail: user.email,
+    action: "settings_updated",
+    entityType: "settings",
+    metadata: {
+      appointment_types: appointmentTypeIds.length,
+      schedule_days: scheduleIds.length,
+      breaks: breakIds.length,
+      blocked_slots: blockedSlotIds.length,
+    },
+  });
 
   revalidatePath("/admin/settings");
 }

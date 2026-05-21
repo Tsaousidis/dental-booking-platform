@@ -1,8 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 
 import { requireAdminUser } from "@/lib/admin/auth";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 import { hasSupabaseBrowserEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,6 +25,19 @@ export async function login(_state: LoginState, formData: FormData): Promise<Log
 
   if (!email || !password) {
     return { message: "Το email και ο κωδικός είναι υποχρεωτικά." };
+  }
+
+  const rateLimit = await checkRateLimit({
+    route: "admin:login",
+    identifier: `${getLoginIdentifier(await headers())}:${email.toLowerCase()}`,
+    limit: 5,
+    windowSeconds: 60 * 10,
+  });
+
+  if (!rateLimit.allowed) {
+    return {
+      message: "Πολλές προσπάθειες σύνδεσης. Δοκιμάστε ξανά σε λίγα λεπτά.",
+    };
   }
 
   const supabase = await createClient();
@@ -52,4 +67,15 @@ export async function logout() {
   }
 
   redirect("/admin/login");
+}
+
+function getLoginIdentifier(headersList: Headers) {
+  const forwardedFor = headersList.get("x-forwarded-for")?.split(",")[0]?.trim();
+
+  return (
+    headersList.get("cf-connecting-ip") ??
+    forwardedFor ??
+    headersList.get("x-real-ip") ??
+    "unknown"
+  );
 }

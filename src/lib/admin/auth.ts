@@ -48,6 +48,13 @@ export async function createAuthorizedAdminClient() {
   return createAdminClient();
 }
 
+export async function createAuthorizedAdminContext() {
+  const user = await requireAdminUser();
+  const supabase = createAdminClient();
+
+  return { supabase, user };
+}
+
 function getAllowedAdminEmails() {
   return (process.env.ADMIN_EMAILS ?? "")
     .split(",")
