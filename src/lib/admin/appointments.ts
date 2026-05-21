@@ -2,7 +2,7 @@ import "server-only";
 
 import { revalidatePath } from "next/cache";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAuthorizedAdminClient } from "./auth";
 
 export type AppointmentStatus = "confirmed" | "completed" | "cancelled" | "no_show";
 
@@ -24,7 +24,7 @@ export type AdminAppointment = {
 };
 
 export async function getAdminAppointments() {
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
 
   await completePastConfirmedAppointments();
 
@@ -48,7 +48,7 @@ export async function getAdminAppointments() {
 }
 
 export async function completePastConfirmedAppointments() {
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
   const { error } = await supabase
     .from("appointments")
     .update({ status: "completed" })
@@ -70,7 +70,7 @@ export async function updateAppointmentStatus(formData: FormData) {
     throw new Error("Μη έγκυρη αλλαγή status.");
   }
 
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
   const { error } = await supabase
     .from("appointments")
     .update({ status })

@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 
 import { AdminShell } from "@/components/admin/AdminShell";
 import { SetupNotice } from "@/components/admin/SetupNotice";
+import { requireAdminUser } from "@/lib/admin/auth";
 import { hasSupabaseBrowserEnv } from "@/lib/supabase/env";
-import { createClient } from "@/lib/supabase/server";
 
 export default async function ProtectedAdminLayout({
   children,
@@ -14,14 +14,13 @@ export default async function ProtectedAdminLayout({
     return <SetupNotice />;
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user;
 
-  if (!user) {
+  try {
+    user = await requireAdminUser();
+  } catch {
     redirect("/admin/login");
   }
 
-  return <AdminShell email={user.email ?? "Admin"}>{children}</AdminShell>;
+  return <AdminShell email={user.email}>{children}</AdminShell>;
 }

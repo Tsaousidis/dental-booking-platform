@@ -3,7 +3,7 @@ import "server-only";
 import { fromZonedTime } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAuthorizedAdminClient } from "./auth";
 
 const DEFAULT_TIMEZONE = "Europe/Athens";
 
@@ -88,7 +88,7 @@ export type AdminSettingsData = {
 };
 
 export async function getAdminSettings(): Promise<AdminSettingsData> {
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
 
   const [
     doctorProfileResult,
@@ -158,7 +158,7 @@ export async function getAdminSettings(): Promise<AdminSettingsData> {
 export async function saveAdminSettings(formData: FormData) {
   "use server";
 
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
 
   const doctorProfileId = getRequiredValue(formData, "doctor_profile_id");
   const bookingSettingsId = getRequiredValue(formData, "booking_settings_id");
@@ -244,7 +244,7 @@ export async function saveAdminSettings(formData: FormData) {
 }
 
 async function updateAppointmentType(formData: FormData, id: string) {
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
 
   if (formData.get(`appointment_type_${id}_delete`) === "on") {
     const { error } = await supabase.from("appointment_types").delete().eq("id", id);
@@ -282,7 +282,7 @@ async function createNewAppointmentType(formData: FormData) {
     throw new Error("Για νέο τύπο ραντεβού συμπληρώστε όνομα στα Ελληνικά, όνομα στα Αγγλικά και διάρκεια.");
   }
 
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
   const { data: lastAppointmentType, error: lastAppointmentTypeError } = await supabase
     .from("appointment_types")
     .select("sort_order")
@@ -304,7 +304,7 @@ async function createNewAppointmentType(formData: FormData) {
 }
 
 async function updateDoctorSchedule(formData: FormData, id: string) {
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
   const isWorking = formData.get(`schedule_${id}_is_working`) === "on";
   const startTime = getOptionalValue(formData, `schedule_${id}_start_time`);
   const endTime = getOptionalValue(formData, `schedule_${id}_end_time`);
@@ -326,7 +326,7 @@ async function updateDoctorSchedule(formData: FormData, id: string) {
 }
 
 async function updateScheduleBreak(formData: FormData, id: string) {
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
 
   if (formData.get(`break_${id}_delete`) === "on") {
     const { error } = await supabase.from("schedule_breaks").delete().eq("id", id);
@@ -359,7 +359,7 @@ async function createNewScheduleBreak(formData: FormData) {
     throw new Error("Για νέο διάλειμμα συμπληρώστε ημέρα, έναρξη και λήξη.");
   }
 
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
   const { error } = await supabase.from("schedule_breaks").insert({
     day_of_week: Number(day),
     start_time: startTime,
@@ -370,7 +370,7 @@ async function createNewScheduleBreak(formData: FormData) {
 }
 
 async function updateBlockedSlot(formData: FormData, id: string, timezone: string) {
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
 
   if (formData.get(`blocked_${id}_delete`) === "on") {
     const { error } = await supabase.from("blocked_slots").delete().eq("id", id);
@@ -405,7 +405,7 @@ async function createNewBlockedSlot(formData: FormData, timezone: string) {
     throw new Error("Για νέο μη διαθέσιμο διάστημα συμπληρώστε ημερομηνία και ώρα έναρξης/λήξης.");
   }
 
-  const supabase = await createClient();
+  const supabase = await createAuthorizedAdminClient();
   const { error } = await supabase.from("blocked_slots").insert({
     start_at: toUtcIso(toLocalDateTime(startDate, startTime), timezone),
     end_at: toUtcIso(toLocalDateTime(endDate, endTime), timezone),

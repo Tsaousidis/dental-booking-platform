@@ -8,7 +8,7 @@ export async function verifyTurnstileToken(token: string | undefined, ip?: strin
   const secret = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secret) {
-    return { ok: true, skipped: true };
+    return { ok: process.env.NODE_ENV !== "production", skipped: true };
   }
 
   if (!token) {
@@ -26,8 +26,8 @@ export async function verifyTurnstileToken(token: string | undefined, ip?: strin
   const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
     method: "POST",
     body: formData,
-  });
-  const payload = (await response.json().catch(() => null)) as TurnstileResponse | null;
+  }).catch(() => null);
+  const payload = (await response?.json().catch(() => null)) as TurnstileResponse | null;
 
   return {
     ok: Boolean(payload?.success),

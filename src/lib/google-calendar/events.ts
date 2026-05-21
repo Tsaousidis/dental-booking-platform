@@ -3,6 +3,7 @@ import "server-only";
 import { google } from "googleapis";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { decryptSecret } from "@/lib/security/encryption";
 
 import { createGoogleOAuthClient, hasGoogleCalendarEnv } from "./client";
 
@@ -98,8 +99,8 @@ async function getActiveCalendarConnection() {
 function getCalendarClient(connection: CalendarConnection) {
   const auth = createGoogleOAuthClient();
   auth.setCredentials({
-    access_token: connection.access_token ?? undefined,
-    refresh_token: connection.refresh_token ?? undefined,
+    access_token: decryptSecret(connection.access_token) ?? undefined,
+    refresh_token: decryptSecret(connection.refresh_token) ?? undefined,
     expiry_date: connection.expiry_date
       ? new Date(connection.expiry_date).getTime()
       : undefined,

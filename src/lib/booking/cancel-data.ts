@@ -18,6 +18,7 @@ type AppointmentRow = {
   patient_email: string;
   start_at: string;
   end_at: string;
+  cancel_token_expires_at: string;
   status: string;
   appointment_types:
     | {
@@ -41,7 +42,7 @@ export async function getCancelAppointmentDetails({
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("appointments")
-    .select("patient_name,patient_email,start_at,end_at,status,appointment_types(name_el,name_en)")
+    .select("patient_name,patient_email,start_at,end_at,cancel_token_expires_at,status,appointment_types(name_el,name_en)")
     .eq("cancel_token", token)
     .maybeSingle();
 
@@ -50,6 +51,11 @@ export async function getCancelAppointmentDetails({
   }
 
   const appointment = data as unknown as AppointmentRow;
+
+  if (new Date(appointment.cancel_token_expires_at) <= new Date()) {
+    return null;
+  }
+
   const appointmentType = Array.isArray(appointment.appointment_types)
     ? appointment.appointment_types[0]
     : appointment.appointment_types;

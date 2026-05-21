@@ -7,10 +7,11 @@ import {
   sendPatientRescheduleConfirmation,
 } from "@/lib/emails/booking-emails";
 import { updateCalendarEvent } from "@/lib/google-calendar/events";
+import { checkRateLimit, getRequestIdentifier } from "@/lib/security/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const schema = z.object({
-  token: z.string().trim().min(32),
+  token: z.string().trim().min(32).max(128),
   locale: z.enum(["el", "en"]).default("el"),
   startAt: z.string().datetime(),
 });
@@ -24,6 +25,7 @@ type AppointmentRow = {
   patient_note: string | null;
   start_at: string;
   end_at: string;
+  reschedule_token_expires_at: string;
   status: "confirmed" | "completed" | "cancelled" | "no_show";
   google_event_id: string | null;
   appointment_types:
@@ -39,6 +41,25 @@ type AppointmentRow = {
 };
 
 export async function POST(request: Request) {
+  const rateLimit = await checkRateLimit({
+    route: "booking:reschedule",
+    identifier: getRequestIdentifier(request),
+    limit: 10,
+    windowSeconds: 60 * 10,
+  });
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many reschedule attempts. Please try again later." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfter),
+        },
+      },
+    );
+  }
+
   const json = await request.json().catch(() => null);
   const result = schema.safeParse(json);
 
@@ -51,7 +72,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from("appointments")
     .select(
-      "id,appointment_type_id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,status,google_event_id,appointment_types(name_el,name_en)",
+      "id,appointment_type_id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,reschedule_token_expires_at,status,google_event_id,appointment_types(name_el,name_en)",
     )
     .eq("reschedule_token", token)
     .maybeSingle();
@@ -62,7 +83,18 @@ export async function POST(request: Request) {
 
   const appointment = data as unknown as AppointmentRow;
 
-  if (appointment.status !== "confirmed" || !appointment.appointment_type_id) {
+  if (new Date(appointment.reschedule_token_expires_at) <= new Date()) {
+    return NextResponse.json(
+      { error: "This reschedule link has expired." },
+      { status: 410 },
+    );
+  }
+
+  if (
+    appointment.status !== "confirmed" ||
+    !appointment.appointment_type_id ||
+    new Date(appointment.start_at) <= new Date()
+  ) {
     return NextResponse.json(
       { error: "This appointment can no longer be rescheduled online." },
       { status: 409 },
@@ -88,12 +120,22 @@ export async function POST(request: Request) {
     .update({
       start_at: selectedSlot.startAt,
       end_at: selectedSlot.endAt,
+      reschedule_token_expires_at: new Date(
+        Date.now() + 180 * 24 * 60 * 60 * 1000,
+      ).toISOString(),
     })
     .eq("id", appointment.id)
     .select("id,start_at,end_at")
     .single();
 
   if (updateError) {
+    if (updateError.code === "23P01") {
+      return NextResponse.json(
+        { error: "This appointment time is no longer available." },
+        { status: 409 },
+      );
+    }
+
     return NextResponse.json({ error: "Could not reschedule appointment." }, { status: 500 });
   }
 

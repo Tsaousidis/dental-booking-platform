@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 
+import { requireAdminUser } from "@/lib/admin/auth";
 import { hasSupabaseBrowserEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,6 +33,13 @@ export async function login(_state: LoginState, formData: FormData): Promise<Log
 
   if (error) {
     return { message: "Η σύνδεση απέτυχε. Ελέγξτε τα στοιχεία σας." };
+  }
+
+  try {
+    await requireAdminUser();
+  } catch {
+    await supabase.auth.signOut();
+    return { message: "Ο χρήστης δεν έχει πρόσβαση στο admin." };
   }
 
   redirect("/admin/appointments");

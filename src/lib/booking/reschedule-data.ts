@@ -22,6 +22,7 @@ type AppointmentRow = {
   patient_email: string;
   start_at: string;
   end_at: string;
+  reschedule_token_expires_at: string;
   status: string;
   appointment_types:
     | {
@@ -45,7 +46,7 @@ export async function getRescheduleAppointmentDetails({
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("appointments")
-    .select("id,appointment_type_id,patient_name,patient_email,start_at,end_at,status,appointment_types(name_el,name_en)")
+    .select("id,appointment_type_id,patient_name,patient_email,start_at,end_at,reschedule_token_expires_at,status,appointment_types(name_el,name_en)")
     .eq("reschedule_token", token)
     .maybeSingle();
 
@@ -54,6 +55,11 @@ export async function getRescheduleAppointmentDetails({
   }
 
   const appointment = data as unknown as AppointmentRow;
+
+  if (new Date(appointment.reschedule_token_expires_at) <= new Date()) {
+    return null;
+  }
+
   const appointmentType = Array.isArray(appointment.appointment_types)
     ? appointment.appointment_types[0]
     : appointment.appointment_types;

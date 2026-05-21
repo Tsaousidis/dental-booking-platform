@@ -34,7 +34,11 @@ export async function checkRateLimit({
     .maybeSingle();
 
   if (error) {
-    return { allowed: true, retryAfter, skipped: true };
+    return {
+      allowed: process.env.NODE_ENV !== "production",
+      retryAfter,
+      skipped: true,
+    };
   }
 
   if (!data) {

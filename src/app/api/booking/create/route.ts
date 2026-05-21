@@ -95,6 +95,13 @@ export async function POST(request: Request) {
     .single();
 
   if (appointmentError) {
+    if (appointmentError.code === "23P01") {
+      return NextResponse.json(
+        { error: "This appointment time is no longer available." },
+        { status: 409 },
+      );
+    }
+
     return NextResponse.json(
       { error: "Could not create appointment." },
       { status: 500 },
