@@ -3,6 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getRequestIp } from "./request-ip";
 
 type RateLimitOptions = {
   route: string;
@@ -66,22 +67,7 @@ export async function checkRateLimit({
 }
 
 export function getRequestIdentifier(request: Request, fallback = "missing") {
-  const headers = request.headers;
-  const forwardedFor = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const forwarded = headers
-    .get("forwarded")
-    ?.split(";")
-    .find((part) => part.trim().toLowerCase().startsWith("for="))
-    ?.split("=")[1]
-    ?.replace(/^"|"$/g, "")
-    .trim();
-  const candidate =
-    headers.get("cf-connecting-ip") ??
-    headers.get("true-client-ip") ??
-    forwardedFor ??
-    headers.get("x-real-ip") ??
-    headers.get("x-client-ip") ??
-    forwarded;
+  const candidate = getRequestIp(request);
 
   if (candidate) {
     return `ip:${candidate}`;

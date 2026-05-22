@@ -4,6 +4,7 @@ import {
   sendDoctorReminderEmail,
   sendPatientReminderEmail,
 } from "@/lib/emails/booking-emails";
+import { getRequestIp } from "@/lib/security/request-ip";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type ReminderAppointment = {
@@ -32,6 +33,10 @@ export async function POST(request: Request) {
 
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (!isAllowedCronIp(request)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
   const supabase = createAdminClient();
@@ -162,6 +167,21 @@ export async function POST(request: Request) {
     patientRemindersSent,
     doctorRemindersSent,
   });
+}
+
+function isAllowedCronIp(request: Request) {
+  const allowedIps = (process.env.CRON_ALLOWED_IPS ?? "")
+    .split(",")
+    .map((ip) => ip.trim())
+    .filter(Boolean);
+
+  if (allowedIps.length === 0) {
+    return true;
+  }
+
+  const requestIp = getRequestIp(request);
+
+  return Boolean(requestIp && allowedIps.includes(requestIp));
 }
 
 async function completePastConfirmedAppointments() {

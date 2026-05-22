@@ -5,28 +5,33 @@ import { useState } from "react";
 
 import { type Dictionary } from "@/lib/i18n";
 
-const STORAGE_KEY = "dental_cookie_consent";
+type ConsentValue = "accepted" | "rejected";
 
-export function CookieBanner({ dictionary }: { dictionary: Dictionary }) {
-  const [isVisible, setIsVisible] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-
-    return !localStorage.getItem(STORAGE_KEY);
-  });
+export function CookieBanner({
+  dictionary,
+  hasStoredConsent,
+}: {
+  dictionary: Dictionary;
+  hasStoredConsent: boolean;
+}) {
+  const [isVisible, setIsVisible] = useState(!hasStoredConsent);
   const [isManaging, setIsManaging] = useState(false);
   const copy = dictionary.cookieBanner;
 
-  function saveConsent(value: "accepted" | "rejected") {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        value,
-        savedAt: new Date().toISOString(),
-      }),
-    );
+  async function saveConsent(value: ConsentValue) {
     setIsVisible(false);
+
+    try {
+      await fetch("/api/cookie-consent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ value }),
+      });
+    } catch {
+      setIsVisible(true);
+    }
   }
 
   if (!isVisible) {

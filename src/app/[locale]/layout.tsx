@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { PublicHeader } from "@/components/layout/PublicHeader";
@@ -27,6 +28,8 @@ export default async function LocaleLayout({
 
   const activeLocale = locale satisfies Locale;
   const dictionary = await getDictionary(activeLocale);
+  const cookieStore = await cookies();
+  const hasStoredCookieConsent = Boolean(cookieStore.get("dental_cookie_consent"));
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -35,7 +38,7 @@ export default async function LocaleLayout({
       <StructuredData />
       <PublicFooter locale={activeLocale} dictionary={dictionary} />
       <StickyMobileBookingCTA locale={activeLocale} dictionary={dictionary} />
-      <CookieBanner dictionary={dictionary} />
+      <CookieBanner dictionary={dictionary} hasStoredConsent={hasStoredCookieConsent} />
     </div>
   );
 }
