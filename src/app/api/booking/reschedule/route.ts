@@ -121,7 +121,7 @@ export async function POST(request: Request) {
       start_at: selectedSlot.startAt,
       end_at: selectedSlot.endAt,
       reschedule_token_expires_at: new Date(
-        Date.now() + 180 * 24 * 60 * 60 * 1000,
+        Date.now() + 14 * 24 * 60 * 60 * 1000,
       ).toISOString(),
     })
     .eq("id", appointment.id)

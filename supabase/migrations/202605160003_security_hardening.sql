@@ -1,13 +1,13 @@
 create extension if not exists btree_gist;
 
 alter table public.appointments
-  add column if not exists cancel_token_expires_at timestamptz not null default (now() + interval '180 days'),
-  add column if not exists reschedule_token_expires_at timestamptz not null default (now() + interval '180 days');
+  add column if not exists cancel_token_expires_at timestamptz not null default (now() + interval '14 days'),
+  add column if not exists reschedule_token_expires_at timestamptz not null default (now() + interval '14 days');
 
 update public.appointments
 set
-  cancel_token_expires_at = coalesce(cancel_token_expires_at, created_at + interval '180 days'),
-  reschedule_token_expires_at = coalesce(reschedule_token_expires_at, created_at + interval '180 days');
+  cancel_token_expires_at = coalesce(cancel_token_expires_at, created_at + interval '14 days'),
+  reschedule_token_expires_at = coalesce(reschedule_token_expires_at, created_at + interval '14 days');
 
 do $$
 begin
