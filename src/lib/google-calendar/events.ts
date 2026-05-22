@@ -110,14 +110,21 @@ function getCalendarClient(connection: CalendarConnection) {
 }
 
 function buildEvent(input: CalendarAppointmentInput) {
+  const appointmentTypeName = sanitizeCalendarText(input.appointmentTypeName);
+  const patientName = sanitizeCalendarText(input.patientName);
+  const patientEmail = sanitizeCalendarText(input.patientEmail);
+  const patientPhone = sanitizeCalendarText(input.patientPhone);
+  const patientNote = sanitizeCalendarText(input.patientNote);
+  const appointmentId = sanitizeCalendarText(input.appointmentId);
+
   return {
-    summary: `${input.appointmentTypeName} - ${input.patientName}`,
+    summary: `${appointmentTypeName} - ${patientName}`,
     description: [
-      `Patient: ${input.patientName}`,
-      `Email: ${input.patientEmail}`,
-      `Phone: ${input.patientPhone}`,
-      input.patientNote ? `Note: ${input.patientNote}` : null,
-      `Appointment ID: ${input.appointmentId}`,
+      `Patient: ${patientName}`,
+      `Email: ${patientEmail}`,
+      `Phone: ${patientPhone}`,
+      patientNote ? `Note: ${patientNote}` : null,
+      `Appointment ID: ${appointmentId}`,
     ]
       .filter(Boolean)
       .join("\n"),
@@ -130,4 +137,17 @@ function buildEvent(input: CalendarAppointmentInput) {
       timeZone: "Europe/Athens",
     },
   };
+}
+
+function sanitizeCalendarText(value: string | null | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  return value
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+    .slice(0, 1000);
 }
