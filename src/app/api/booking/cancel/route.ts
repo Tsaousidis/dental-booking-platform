@@ -39,9 +39,12 @@ type AppointmentRow = {
 };
 
 export async function POST(request: Request) {
+  const json = await request.json().catch(() => null);
+  const result = cancelBookingSchema.safeParse(json);
+  const fallbackIdentifier = result.success ? `cancel:${result.data.token}` : "booking:cancel";
   const rateLimit = await checkRateLimit({
     route: "booking:cancel",
-    identifier: getRequestIdentifier(request),
+    identifier: getRequestIdentifier(request, fallbackIdentifier),
     limit: 10,
     windowSeconds: 60 * 10,
   });
@@ -57,9 +60,6 @@ export async function POST(request: Request) {
       },
     );
   }
-
-  const json = await request.json().catch(() => null);
-  const result = cancelBookingSchema.safeParse(json);
 
   if (!result.success) {
     return NextResponse.json(

@@ -19,7 +19,8 @@ export async function checkRateLimit({
 }: RateLimitOptions) {
   const windowMs = windowSeconds * 1000;
   const windowStart = new Date(Math.floor(Date.now() / windowMs) * windowMs);
-  const identifierHash = hashIdentifier(identifier);
+  const normalizedIdentifier = identifier.trim() || "missing-identifier";
+  const identifierHash = hashIdentifier(normalizedIdentifier);
   const retryAfter = Math.ceil(
     (windowStart.getTime() + windowMs - Date.now()) / 1000,
   );
@@ -64,15 +65,29 @@ export async function checkRateLimit({
   return { allowed: !updateError, retryAfter, skipped: Boolean(updateError) };
 }
 
-export function getRequestIdentifier(request: Request) {
-  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-
-  return (
-    request.headers.get("cf-connecting-ip") ??
+export function getRequestIdentifier(request: Request, fallback = "missing") {
+  const headers = request.headers;
+  const forwardedFor = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const forwarded = headers
+    .get("forwarded")
+    ?.split(";")
+    .find((part) => part.trim().toLowerCase().startsWith("for="))
+    ?.split("=")[1]
+    ?.replace(/^"|"$/g, "")
+    .trim();
+  const candidate =
+    headers.get("cf-connecting-ip") ??
+    headers.get("true-client-ip") ??
     forwardedFor ??
-    request.headers.get("x-real-ip") ??
-    "unknown"
-  );
+    headers.get("x-real-ip") ??
+    headers.get("x-client-ip") ??
+    forwarded;
+
+  if (candidate) {
+    return `ip:${candidate}`;
+  }
+
+  return `fallback:${fallback}`;
 }
 
 function hashIdentifier(identifier: string) {

@@ -10,9 +10,16 @@ const schema = z.object({
 });
 
 export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const result = schema.safeParse({
+    token: url.searchParams.get("token"),
+  });
+  const fallbackIdentifier = result.success
+    ? `reschedule-availability:${result.data.token}`
+    : "booking:reschedule-availability";
   const rateLimit = await checkRateLimit({
     route: "booking:reschedule-availability",
-    identifier: getRequestIdentifier(request),
+    identifier: getRequestIdentifier(request, fallbackIdentifier),
     limit: 30,
     windowSeconds: 60 * 10,
   });
@@ -28,11 +35,6 @@ export async function GET(request: Request) {
       },
     );
   }
-
-  const url = new URL(request.url);
-  const result = schema.safeParse({
-    token: url.searchParams.get("token"),
-  });
 
   if (!result.success) {
     return NextResponse.json({ error: "Invalid reschedule link." }, { status: 400 });

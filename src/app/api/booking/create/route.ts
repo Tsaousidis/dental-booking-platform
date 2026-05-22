@@ -25,9 +25,14 @@ const createBookingSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const json = await request.json().catch(() => null);
+  const result = createBookingSchema.safeParse(json);
+  const fallbackIdentifier = result.success
+    ? `create:${result.data.patientEmail.toLowerCase()}`
+    : "booking:create";
   const rateLimit = await checkRateLimit({
     route: "booking:create",
-    identifier: getRequestIdentifier(request),
+    identifier: getRequestIdentifier(request, fallbackIdentifier),
     limit: 5,
     windowSeconds: 60 * 10,
   });
@@ -43,9 +48,6 @@ export async function POST(request: Request) {
       },
     );
   }
-
-  const json = await request.json().catch(() => null);
-  const result = createBookingSchema.safeParse(json);
 
   if (!result.success) {
     return NextResponse.json(

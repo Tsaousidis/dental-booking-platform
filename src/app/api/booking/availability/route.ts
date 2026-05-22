@@ -9,9 +9,16 @@ const availabilitySearchParamsSchema = z.object({
 });
 
 export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const result = availabilitySearchParamsSchema.safeParse({
+    appointmentTypeId: url.searchParams.get("appointmentTypeId"),
+  });
+  const fallbackIdentifier = result.success
+    ? `availability:${result.data.appointmentTypeId}`
+    : "booking:availability";
   const rateLimit = await checkRateLimit({
     route: "booking:availability",
-    identifier: getRequestIdentifier(request),
+    identifier: getRequestIdentifier(request, fallbackIdentifier),
     limit: 120,
     windowSeconds: 60 * 10,
   });
@@ -27,11 +34,6 @@ export async function GET(request: Request) {
       },
     );
   }
-
-  const url = new URL(request.url);
-  const result = availabilitySearchParamsSchema.safeParse({
-    appointmentTypeId: url.searchParams.get("appointmentTypeId"),
-  });
 
   if (!result.success) {
     return NextResponse.json(

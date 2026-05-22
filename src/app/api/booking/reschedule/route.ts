@@ -42,9 +42,12 @@ type AppointmentRow = {
 };
 
 export async function POST(request: Request) {
+  const json = await request.json().catch(() => null);
+  const result = schema.safeParse(json);
+  const fallbackIdentifier = result.success ? `reschedule:${result.data.token}` : "booking:reschedule";
   const rateLimit = await checkRateLimit({
     route: "booking:reschedule",
-    identifier: getRequestIdentifier(request),
+    identifier: getRequestIdentifier(request, fallbackIdentifier),
     limit: 10,
     windowSeconds: 60 * 10,
   });
@@ -60,9 +63,6 @@ export async function POST(request: Request) {
       },
     );
   }
-
-  const json = await request.json().catch(() => null);
-  const result = schema.safeParse(json);
 
   if (!result.success) {
     return NextResponse.json({ error: "Invalid reschedule details." }, { status: 400 });
