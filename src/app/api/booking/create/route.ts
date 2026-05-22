@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getAvailabilityForAppointmentType } from "@/lib/booking/availability-data";
+import { hasConfirmedAppointmentOverlap } from "@/lib/booking/conflicts";
 import {
   sendDoctorNewBookingNotification,
   sendPatientBookingConfirmation,
@@ -79,6 +80,18 @@ export async function POST(request: Request) {
   }
 
   const supabase = createAdminClient();
+  const hasOverlap = await hasConfirmedAppointmentOverlap({
+    startAt: selectedSlot.startAt,
+    endAt: selectedSlot.endAt,
+  });
+
+  if (hasOverlap) {
+    return NextResponse.json(
+      { error: "This appointment time is no longer available." },
+      { status: 409 },
+    );
+  }
+
   const { data: appointment, error: appointmentError } = await supabase
     .from("appointments")
     .insert({
