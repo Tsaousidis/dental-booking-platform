@@ -20,15 +20,18 @@ export function AppointmentTypesOrderList({
   const [items, setItems] = useState(appointmentTypes);
 
   return (
-    <Reorder.Group axis="y" values={items} onReorder={setItems} className="mt-6 grid gap-4">
-      {items.map((type, index) => (
-        <AppointmentTypeRow
-          key={type.id}
-          type={type}
-          index={index}
-        />
-      ))}
-    </Reorder.Group>
+    <div className="mt-6 grid gap-3">
+      <p className="text-sm text-muted">Σύρετε από τη λαβή για αλλαγή σειράς.</p>
+      <Reorder.Group axis="y" values={items} onReorder={setItems} className="grid gap-4">
+        {items.map((type, index) => (
+          <AppointmentTypeRow
+            key={type.id}
+            type={type}
+            index={index}
+          />
+        ))}
+      </Reorder.Group>
+    </div>
   );
 }
 

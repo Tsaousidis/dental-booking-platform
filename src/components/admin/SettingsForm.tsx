@@ -98,7 +98,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
 
       <section className="border border-line bg-surface p-6">
         <SectionHeader
-          title="Εργάσιμες ώρες"
+          title="Εργάσιμες ώρες ανά ημέρα"
           description="Εργάσιμες ημέρες και ώρες."
         />
         <div className="mt-6 grid gap-3">
@@ -109,15 +109,14 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
             >
               <div>
                 <p className="text-sm font-semibold">{dayLabels[day.day_of_week]}</p>
-                <p className="mt-1 text-xs text-muted">Ημέρα εβδομαδιαίου προγράμματος</p>
               </div>
-              <TimeField
+              <TimeSelectField
                 label="Έναρξη"
                 name={`schedule_${day.id}_start_time`}
                 defaultValue={normalizeTime(day.start_time)}
                 required={false}
               />
-              <TimeField
+              <TimeSelectField
                 label="Λήξη"
                 name={`schedule_${day.id}_end_time`}
                 defaultValue={normalizeTime(day.end_time)}
@@ -180,7 +179,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           title="Κανόνες κρατήσεων"
           description="Ρυθμίσεις που καθορίζουν πότε μπορεί ένας ασθενής να κλείσει ραντεβού online."
         />
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
           <NumberField
             label="Μέχρι πόσες μέρες μπροστά"
             name="booking_horizon_days"
@@ -485,7 +484,7 @@ function NumberField({
             compact ? "w-16 flex-none" : "w-full flex-1"
           }`}
         />
-        {suffix ? <span className="pr-3 text-sm text-muted">{suffix}</span> : null}
+        {suffix ? <span className="shrink-0 pr-3 text-sm text-muted">{suffix}</span> : null}
       </span>
       {description ? <span className="text-xs leading-5 text-muted">{description}</span> : null}
     </label>
@@ -556,31 +555,6 @@ function TimezoneSelectField({
   );
 }
 
-function TimeField({
-  label,
-  name,
-  defaultValue = "",
-  required = true,
-}: {
-  label: string;
-  name: string;
-  defaultValue?: string;
-  required?: boolean;
-}) {
-  return (
-    <label className="grid gap-2 text-sm font-medium">
-      {label}
-      <input
-        name={name}
-        type="time"
-        defaultValue={defaultValue}
-        required={required}
-        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
-      />
-    </label>
-  );
-}
-
 const timeSelectOptions = Array.from({ length: 24 * 4 }, (_, index) => {
   const totalMinutes = index * 15;
   const hours = Math.floor(totalMinutes / 60);
@@ -639,10 +613,7 @@ function BlockedDateTimeField({
       <div className="grid gap-2 sm:grid-cols-[1fr_120px]">
         <input
           name={`${name}_date`}
-          type="text"
-          inputMode="numeric"
-          placeholder="dd/mm/yyyy"
-          pattern="\\d{2}/\\d{2}/\\d{4}"
+          type="date"
           defaultValue={date}
           required={required}
           className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
@@ -737,7 +708,7 @@ function splitDateTimeValue(value: string) {
   const [year, month, day] = datePart.split("-");
 
   return {
-    date: year && month && day ? `${day}/${month}/${year}` : "",
+    date: year && month && day ? `${year}-${month}-${day}` : "",
     time: timePart.slice(0, 5),
   };
 }

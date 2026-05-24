@@ -459,6 +459,14 @@ function getDateTimeValue(formData: FormData, key: string) {
 }
 
 function toLocalDateTime(date: string, time: string) {
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+
+    return `${year}-${month}-${day}T${time}`;
+  }
+
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(date);
 
   if (!match) {
