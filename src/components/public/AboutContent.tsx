@@ -36,7 +36,12 @@ export function AboutContent({ dictionary }: { dictionary: Dictionary }) {
 
   return (
     <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
-      <div className="min-h-[520px] rounded-lg border border-line/40 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(250,249,247,0.56)),url('https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1100&q=80')] bg-cover bg-center ambient-shadow" />
+      <div
+        className="min-h-[520px] rounded-lg border border-line/40 bg-cover bg-center ambient-shadow"
+        style={{
+          backgroundImage: `linear-gradient(180deg,rgba(255,255,255,0.08),rgba(250,249,247,0.56)),url("${brand.doctorImageUrl}")`,
+        }}
+      />
 
       <div className="space-y-8">
         <div className="rounded-lg border border-line/50 bg-surface p-6 ambient-shadow sm:p-8">

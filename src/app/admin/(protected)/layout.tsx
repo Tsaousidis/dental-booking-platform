@@ -14,13 +14,11 @@ export default async function ProtectedAdminLayout({
     return <SetupNotice />;
   }
 
-  let user;
-
   try {
-    user = await requireAdminUser();
+    await requireAdminUser();
   } catch {
     redirect("/admin/login");
   }
 
-  return <AdminShell email={user.email}>{children}</AdminShell>;
+  return <AdminShell>{children}</AdminShell>;
 }

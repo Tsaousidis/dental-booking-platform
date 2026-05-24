@@ -16,7 +16,7 @@ import {
 
 export async function getAvailabilityForAppointmentType(
   appointmentTypeId: string,
-  options: { excludeAppointmentId?: string } = {},
+  options: { excludeAppointmentId?: string; includeUnavailableDays?: boolean } = {},
 ) {
   const supabase = createAdminClient();
 
@@ -91,6 +91,7 @@ export async function getAvailabilityForAppointmentType(
     appointments: (appointmentsResult.data ?? []) as AvailabilityAppointment[],
     settings,
     now,
+    includeUnavailableDays: options.includeUnavailableDays,
   });
 }
 

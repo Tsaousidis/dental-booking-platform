@@ -176,7 +176,9 @@ export function BookingFlow({
 
           setAvailableDays(days);
           setSelectedDate((currentDate) =>
-            currentDate && days.some((day) => day.date === currentDate) ? currentDate : "",
+            currentDate && days.some((day) => day.date === currentDate && isBookableDay(day))
+              ? currentDate
+              : "",
           );
           setSelectedSlotStart((currentSlot) =>
             currentSlot &&
@@ -535,16 +537,17 @@ function StepDay({
               }
 
               const day = daysByDate.get(cell.date);
-              const isAvailable = Boolean(day);
+              const isAvailable = Boolean(day && isBookableDay(day));
               const isSelected = cell.date === selectedDate;
               const isPast = cell.date < todayDate;
               const isToday = cell.date === todayDate;
               const statusLabel = getCalendarStatusLabel({
                 copy,
-                isAvailable,
+                day,
                 isPast,
                 isWeekend: cell.isWeekend,
               });
+              const isUnavailable = !isAvailable && !isPast;
 
               return (
                 <button
@@ -559,10 +562,8 @@ function StepDay({
                         ? cell.isWeekend
                           ? "border-line bg-surface-low/70 text-muted hover:border-accent hover:bg-surface-low hover:text-foreground"
                           : "border-line bg-background text-foreground hover:border-accent hover:bg-surface-low"
-                        : isPast
+                        : isPast || isUnavailable
                           ? "border-transparent bg-transparent text-muted/30"
-                        : cell.isWeekend
-                          ? "border-line/50 bg-surface-low/70 text-muted/55"
                           : "border-line/40 bg-background/60 text-muted/45"
                   } ${isToday && !isSelected ? "ring-1 ring-accent/70 ring-offset-2 ring-offset-surface" : ""}`}
                 >
@@ -640,16 +641,16 @@ function getWeekdayLabels(locale: Locale) {
 
 function getCalendarStatusLabel({
   copy,
-  isAvailable,
+  day,
   isPast,
   isWeekend,
 }: {
   copy: BookingFlowCopy;
-  isAvailable: boolean;
+  day: AvailableDay | undefined;
   isPast: boolean;
   isWeekend: boolean;
 }) {
-  if (isAvailable) {
+  if (day?.status === "available") {
     return copy.availableLabel;
   }
 
@@ -657,11 +658,15 @@ function getCalendarStatusLabel({
     return copy.pastLabel;
   }
 
-  if (isWeekend) {
+  if (day?.status === "closed" || (!day && isWeekend)) {
     return copy.closedLabel;
   }
 
   return copy.fullyBookedLabel;
+}
+
+function isBookableDay(day: AvailableDay) {
+  return day.status === "available" && day.slots.length > 0;
 }
 
 function StepTime({

@@ -1,6 +1,6 @@
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AppointmentsList } from "@/components/admin/AppointmentsList";
-import { getAdminAppointments } from "@/lib/admin/appointments";
+import { getAdminAppointments, updateAppointmentStatus } from "@/lib/admin/appointments";
 
 export default async function AdminAppointmentsPage() {
   const appointments = await getAdminAppointments();
@@ -12,7 +12,10 @@ export default async function AdminAppointmentsPage() {
         title="Ραντεβού"
         description="Προβολή επερχόμενων και παλαιότερων ραντεβού, με γρήγορη αλλαγή status από τον γιατρό."
       />
-      <AppointmentsList appointments={appointments} />
+      <AppointmentsList
+        appointments={appointments}
+        updateStatusAction={updateAppointmentStatus}
+      />
     </div>
   );
 }

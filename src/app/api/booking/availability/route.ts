@@ -42,7 +42,9 @@ export async function GET(request: Request) {
     );
   }
 
-  const days = await getAvailabilityForAppointmentType(result.data.appointmentTypeId);
+  const days = await getAvailabilityForAppointmentType(result.data.appointmentTypeId, {
+    includeUnavailableDays: true,
+  });
 
   return NextResponse.json(
     { days },

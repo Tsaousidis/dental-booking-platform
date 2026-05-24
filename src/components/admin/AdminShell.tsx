@@ -1,30 +1,17 @@
-import { BarChart3, CalendarDays, LogOut, Settings } from "lucide-react";
-import Link from "next/link";
+import { LogOut } from "lucide-react";
 import { type ReactNode } from "react";
 
 import { logout } from "@/app/admin/login/actions";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { BrandMark } from "@/components/layout/BrandMark";
 
-const adminNav = [
-  { href: "/admin/appointments", label: "Ραντεβού", icon: CalendarDays },
-  { href: "/admin/settings", label: "Ρυθμίσεις", icon: Settings },
-  { href: "/admin/insights", label: "Στατιστικά", icon: BarChart3 },
-];
-
-export function AdminShell({
-  email,
-  children,
-}: {
-  email: string;
-  children: ReactNode;
-}) {
+export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-line/40 bg-surface/85 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
           <div className="min-w-0">
             <BrandMark />
-            <p className="mt-1 text-xs text-muted">{email}</p>
           </div>
           <form action={logout}>
             <button
@@ -40,22 +27,7 @@ export function AdminShell({
 
       <div className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-8 sm:px-8 xl:grid-cols-[220px_1fr]">
         <aside className="min-w-0 xl:sticky xl:top-28 xl:self-start">
-          <nav className="flex gap-2 overflow-x-auto pb-1 xl:grid xl:overflow-visible xl:pb-0">
-            {adminNav.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex min-h-12 shrink-0 items-center gap-3 rounded-lg border border-line/50 bg-surface px-4 text-sm font-medium ambient-shadow transition hover:-translate-y-0.5 hover:border-champagne xl:shrink"
-                >
-                  <Icon size={18} className="text-accent" aria-hidden="true" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+          <AdminNav />
         </aside>
         <main>{children}</main>
       </div>

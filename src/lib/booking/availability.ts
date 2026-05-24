@@ -47,6 +47,7 @@ export type AvailabilityInput = {
   settings: AvailabilityBookingSettings;
   now?: Date;
   slotStepMinutes?: number;
+  includeUnavailableDays?: boolean;
 };
 
 export type AvailableSlot = {
@@ -59,6 +60,7 @@ export type AvailableSlot = {
 export type AvailableDay = {
   date: string;
   slots: AvailableSlot[];
+  status: "available" | "closed" | "full";
 };
 
 export function getAvailableDays(input: AvailabilityInput): AvailableDay[] {
@@ -71,6 +73,7 @@ export function getAvailableDays(input: AvailabilityInput): AvailableDay[] {
     settings,
     now = new Date(),
     slotStepMinutes = 15,
+    includeUnavailableDays = false,
   } = input;
 
   if (!appointmentType.is_active) {
@@ -91,7 +94,7 @@ export function getAvailableDays(input: AvailabilityInput): AvailableDay[] {
       const daySchedule = schedule.find((item) => item.day_of_week === dayOfWeek);
 
       if (!daySchedule?.is_working || !daySchedule.start_time || !daySchedule.end_time) {
-        return { date, slots: [] };
+        return { date, slots: [], status: "closed" as const };
       }
 
       const workingStart = localDateTimeToUtc(date, daySchedule.start_time, timezone);
@@ -132,9 +135,13 @@ export function getAvailableDays(input: AvailabilityInput): AvailableDay[] {
         cursor = addMinutes(cursor, slotStepMinutes);
       }
 
-      return { date, slots };
+      return {
+        date,
+        slots,
+        status: slots.length > 0 ? ("available" as const) : ("full" as const),
+      };
     })
-    .filter((day) => day.slots.length > 0);
+    .filter((day) => includeUnavailableDays || day.slots.length > 0);
 }
 
 function buildBusyIntervals({

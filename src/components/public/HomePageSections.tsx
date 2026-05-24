@@ -1,6 +1,7 @@
 import { ArrowRight, Award, ShieldCheck, Sparkles, Star } from "lucide-react";
 import Link from "next/link";
 
+import { brand } from "@/config/brand";
 import { type Locale } from "@/config/locales";
 import { type Dictionary } from "@/lib/i18n";
 
@@ -18,7 +19,10 @@ export function HomePageSections({
     <>
       <section className="relative min-h-[calc(100vh-80px)] overflow-hidden border-b border-line/30">
         <div className="absolute inset-0 z-0">
-          <div className="h-full w-full bg-[url('https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=1800&q=85')] bg-cover bg-center" />
+          <div
+            className="h-full w-full bg-cover bg-center"
+            style={{ backgroundImage: `url("${brand.doctorImageUrl}")` }}
+          />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(250,249,247,0.95),rgba(250,249,247,0.64),rgba(250,249,247,0.16))]" />
         </div>
 
@@ -51,7 +55,10 @@ export function HomePageSections({
       </section>
 
       <section className="mx-auto grid w-full max-w-7xl gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:py-28">
-        <div className="aspect-[4/5] overflow-hidden rounded-lg bg-surface-container bg-[url('https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1100&q=85')] bg-cover bg-center ambient-shadow" />
+        <div
+          className="aspect-[4/5] overflow-hidden rounded-lg bg-surface-container bg-cover bg-center ambient-shadow"
+          style={{ backgroundImage: `url("${brand.doctorImageUrl}")` }}
+        />
         <div className="flex flex-col justify-center">
           <p className="label-caps text-accent">{dictionary.home.doctorEyebrow}</p>
           <h2 className="mt-4 max-w-3xl text-4xl font-light leading-tight sm:text-6xl">
