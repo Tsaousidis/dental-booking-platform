@@ -38,6 +38,12 @@ type BookingFlowCopy = {
   captchaError: string;
   submitting: string;
   minutes: string;
+  availableLabel: string;
+  closedLabel: string;
+  pastLabel: string;
+  fullyBookedLabel: string;
+  todayLabel: string;
+  confirmationReassurance: string;
 };
 
 const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -72,6 +78,12 @@ const copyByLocale: Record<Locale, BookingFlowCopy> = {
     captchaError: "Ο έλεγχος ασφαλείας δεν ολοκληρώθηκε.",
     submitting: "Γίνεται επιβεβαίωση...",
     minutes: "λεπτά",
+    availableLabel: "Διαθέσιμο",
+    closedLabel: "Κλειστό",
+    pastLabel: "Πέρασε",
+    fullyBookedLabel: "Πλήρες",
+    todayLabel: "Σήμερα",
+    confirmationReassurance: "Θα λάβετε email επιβεβαίωσης αμέσως μετά την ολοκλήρωση του ραντεβού.",
   },
   en: {
     title: "Book appointment",
@@ -102,6 +114,12 @@ const copyByLocale: Record<Locale, BookingFlowCopy> = {
     captchaError: "The security check was not completed.",
     submitting: "Confirming...",
     minutes: "minutes",
+    availableLabel: "Available",
+    closedLabel: "Closed",
+    pastLabel: "Past",
+    fullyBookedLabel: "Fully booked",
+    todayLabel: "Today",
+    confirmationReassurance: "You will receive a confirmation email immediately after the appointment is booked.",
   },
 };
 
@@ -465,6 +483,7 @@ function StepDay({
       : monthOptions[0];
   const activeMonthIndex = Math.max(monthOptions.indexOf(activeMonth), 0);
   const calendarCells = useMemo(() => buildCalendarCells(activeMonth), [activeMonth]);
+  const todayDate = useMemo(() => formatLocalDate(new Date()), []);
 
   return (
     <div>
@@ -518,6 +537,14 @@ function StepDay({
               const day = daysByDate.get(cell.date);
               const isAvailable = Boolean(day);
               const isSelected = cell.date === selectedDate;
+              const isPast = cell.date < todayDate;
+              const isToday = cell.date === todayDate;
+              const statusLabel = getCalendarStatusLabel({
+                copy,
+                isAvailable,
+                isPast,
+                isWeekend: cell.isWeekend,
+              });
 
               return (
                 <button
@@ -525,24 +552,29 @@ function StepDay({
                   type="button"
                   disabled={!isAvailable}
                   onClick={() => onSelect(cell.date)}
-                  className={`min-h-14 rounded-sm border p-2 text-sm transition sm:min-h-20 ${
+                  className={`min-h-16 rounded-sm border p-2 text-sm transition sm:min-h-20 ${
                     isSelected
                       ? "border-accent bg-accent text-surface"
                       : isAvailable
                         ? cell.isWeekend
                           ? "border-line bg-surface-low/70 text-muted hover:border-accent hover:bg-surface-low hover:text-foreground"
                           : "border-line bg-background text-foreground hover:border-accent hover:bg-surface-low"
+                        : isPast
+                          ? "border-transparent bg-transparent text-muted/30"
                         : cell.isWeekend
-                          ? "border-line/40 bg-surface-low/55 text-muted/45"
-                          : "border-transparent bg-transparent text-muted/35"
-                  }`}
+                          ? "border-line/50 bg-surface-low/70 text-muted/55"
+                          : "border-line/40 bg-background/60 text-muted/45"
+                  } ${isToday && !isSelected ? "ring-1 ring-accent/70 ring-offset-2 ring-offset-surface" : ""}`}
                 >
                   <span className="block font-semibold">{cell.dayNumber}</span>
-                  {day ? (
-                    <span className={`mt-1 block text-[11px] ${isSelected ? "text-surface/75" : "text-muted"}`}>
-                      {formatSlotCount(day.slots.length, locale)}
+                  {isToday ? (
+                    <span className={`mt-1 block text-[10px] font-semibold ${isSelected ? "text-surface/80" : "text-accent"}`}>
+                      {copy.todayLabel}
                     </span>
                   ) : null}
+                  <span className={`mt-1 block text-[11px] ${isSelected ? "text-surface/75" : "text-muted"}`}>
+                    {statusLabel}
+                  </span>
                 </button>
               );
             })}
@@ -606,12 +638,30 @@ function getWeekdayLabels(locale: Locale) {
     : ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 }
 
-function formatSlotCount(count: number, locale: Locale) {
-  if (locale === "el") {
-    return count === 1 ? "1 επιλογή" : `${count} επιλογές`;
+function getCalendarStatusLabel({
+  copy,
+  isAvailable,
+  isPast,
+  isWeekend,
+}: {
+  copy: BookingFlowCopy;
+  isAvailable: boolean;
+  isPast: boolean;
+  isWeekend: boolean;
+}) {
+  if (isAvailable) {
+    return copy.availableLabel;
   }
 
-  return count === 1 ? "1 slot" : `${count} slots`;
+  if (isPast) {
+    return copy.pastLabel;
+  }
+
+  if (isWeekend) {
+    return copy.closedLabel;
+  }
+
+  return copy.fullyBookedLabel;
 }
 
 function StepTime({
@@ -745,7 +795,7 @@ function StepConfirmation({
             />
           ) : null}
           <p className="rounded-lg border border-line/70 bg-background p-4 text-sm text-muted">
-            {copy.backendPending}
+            {copy.backendPending} {copy.confirmationReassurance}
             {turnstileSiteKey && !captchaToken ? ` ${copy.captchaError}` : ""}
           </p>
         </div>
