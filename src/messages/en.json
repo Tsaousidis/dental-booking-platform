@@ -52,29 +52,56 @@
   },
   "servicesPage": {
     "eyebrow": "Treatments",
-    "title": "Dental services built for local SEO and patient clarity.",
-    "intro": "Each treatment can become its own optimized service page later. For the MVP, this page gives patients a clear overview and routes them toward booking.",
+    "title": "Dental services for health, aesthetics, and everyday comfort.",
+    "intro": "Explore the clinic's main treatments, what each appointment includes, and what you can expect before booking your visit.",
     "book": "Book this treatment",
+    "durationLabel": "Duration",
+    "visitsLabel": "Visits",
+    "comfortLabel": "Comfort",
+    "suitableLabel": "Best for",
+    "ctaTitle": "Not sure which treatment you need?",
+    "ctaBody": "Book an assessment appointment and the doctor will calmly explain your options, without pressure or rushing.",
+    "ctaButton": "Book an assessment",
     "items": {
       "implants": {
         "title": "Dental Implants",
-        "body": "Restorative treatment planning for missing teeth, with a focus on function, comfort, and natural-looking results."
+        "body": "A stable solution for replacing missing teeth, focused on function, comfort, and a natural-looking result.",
+        "duration": "60-minute assessment",
+        "visits": "Usually multiple visits",
+        "comfort": "Local anesthesia when needed",
+        "suitable": "One or more missing teeth"
       },
       "whitening": {
         "title": "Teeth Whitening",
-        "body": "Professional whitening options designed to brighten the smile safely and predictably."
+        "body": "Professional smile brightening with a safe protocol and guidance for predictable results.",
+        "duration": "45 minutes",
+        "visits": "Usually 1 visit",
+        "comfort": "No anesthesia",
+        "suitable": "Stained or dull-looking teeth"
       },
       "veneers": {
         "title": "Porcelain Veneers",
-        "body": "Aesthetic smile design for shape, symmetry, and color improvements with a refined finish."
+        "body": "Aesthetic smile design for shape, symmetry, and color improvements with a natural, carefully planned result.",
+        "duration": "60-minute assessment",
+        "visits": "Usually 2-3 visits",
+        "comfort": "Minimal intervention where possible",
+        "suitable": "Smile aesthetics and shape improvements"
       },
       "invisalign": {
         "title": "Invisalign",
-        "body": "Clear aligner treatment for discreet orthodontic correction and improved bite alignment."
+        "body": "Clear aligner treatment for discreet orthodontic correction and improved bite alignment, planned around your routine.",
+        "duration": "45-minute assessment",
+        "visits": "Periodic checkups",
+        "comfort": "No fixed braces",
+        "suitable": "Mild to moderate orthodontic needs"
       },
       "cleaning": {
         "title": "Dental Cleaning",
-        "body": "Preventive hygiene appointments to support gum health and long-term maintenance."
+        "body": "Preventive care for gum health, tartar removal, and a cleaner, fresher feeling.",
+        "duration": "30 minutes",
+        "visits": "Usually 1 visit",
+        "comfort": "Gentle procedure",
+        "suitable": "Prevention, hygiene, and regular checkups"
       }
     }
   },
