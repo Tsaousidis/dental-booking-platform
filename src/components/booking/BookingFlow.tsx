@@ -44,6 +44,7 @@ type BookingFlowCopy = {
   fullyBookedLabel: string;
   todayLabel: string;
   confirmationReassurance: string;
+  privacyNote: string;
 };
 
 const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -84,6 +85,7 @@ const copyByLocale: Record<Locale, BookingFlowCopy> = {
     fullyBookedLabel: "Πλήρες",
     todayLabel: "Σήμερα",
     confirmationReassurance: "Θα λάβετε email επιβεβαίωσης αμέσως μετά την ολοκλήρωση του ραντεβού.",
+    privacyNote: "Η κλινική μπορεί να τηρεί ιστορικό ραντεβού και εσωτερικές σημειώσεις σχετικές με τη συνέχεια της φροντίδας σας. Μπορείτε να ζητήσετε πρόσβαση ή διαγραφή σύμφωνα με την Πολιτική Απορρήτου.",
   },
   en: {
     title: "Book appointment",
@@ -120,6 +122,7 @@ const copyByLocale: Record<Locale, BookingFlowCopy> = {
     fullyBookedLabel: "Fully booked",
     todayLabel: "Today",
     confirmationReassurance: "You will receive a confirmation email immediately after the appointment is booked.",
+    privacyNote: "The clinic may keep appointment history and internal notes related to continuity of care. You may request access or deletion according to the Privacy Policy.",
   },
 };
 
@@ -740,6 +743,9 @@ function StepDetails({
             className="min-h-28 rounded-sm border border-line bg-background px-3 py-3 text-base outline-none transition focus:border-accent"
           />
         </label>
+        <p className="rounded-sm border border-line/60 bg-background p-4 text-xs leading-5 text-muted md:col-span-2">
+          {copy.privacyNote}
+        </p>
       </div>
     </div>
   );

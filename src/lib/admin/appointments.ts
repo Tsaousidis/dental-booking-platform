@@ -17,6 +17,10 @@ export type AdminAppointment = {
   end_at: string;
   status: AppointmentStatus;
   google_event_id: string | null;
+  patients: {
+    id: string;
+    notes: string | null;
+  } | null;
   appointment_types: {
     name_el: string;
     name_en: string;
@@ -32,7 +36,7 @@ export async function getAdminAppointments() {
   const { data, error } = await supabase
     .from("appointments")
     .select(
-      "id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,status,google_event_id,appointment_types(name_el,name_en,duration_minutes)",
+      "id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,status,google_event_id,patients(id,notes),appointment_types(name_el,name_en,duration_minutes)",
     )
     .order("start_at", { ascending: true });
 
@@ -45,6 +49,9 @@ export async function getAdminAppointments() {
     appointment_types: Array.isArray(appointment.appointment_types)
       ? appointment.appointment_types[0] ?? null
       : appointment.appointment_types,
+    patients: Array.isArray(appointment.patients)
+      ? appointment.patients[0] ?? null
+      : appointment.patients,
   }));
 }
 
@@ -105,4 +112,7 @@ type RawAdminAppointment = Omit<AdminAppointment, "appointment_types"> & {
   appointment_types:
     | AdminAppointment["appointment_types"]
     | NonNullable<AdminAppointment["appointment_types"]>[];
+  patients:
+    | AdminAppointment["patients"]
+    | NonNullable<AdminAppointment["patients"]>[];
 };

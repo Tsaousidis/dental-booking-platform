@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getAvailabilityForAppointmentType } from "@/lib/booking/availability-data";
 import { hasConfirmedAppointmentOverlap } from "@/lib/booking/conflicts";
+import { ensurePatientProfile } from "@/lib/booking/patients";
 import {
   sendDoctorNewBookingNotification,
   sendPatientBookingConfirmation,
@@ -94,9 +95,16 @@ export async function POST(request: Request) {
     );
   }
 
+  const patientId = await ensurePatientProfile({
+    name: input.patientName,
+    email: input.patientEmail,
+    phone: input.patientPhone,
+  }).catch(() => null);
+
   const { data: appointment, error: appointmentError } = await supabase
     .from("appointments")
     .insert({
+      patient_id: patientId,
       appointment_type_id: input.appointmentTypeId,
       patient_name: input.patientName,
       patient_email: input.patientEmail,

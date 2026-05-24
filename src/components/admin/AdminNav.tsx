@@ -1,11 +1,12 @@
 "use client";
 
-import { BarChart3, CalendarDays, Settings } from "lucide-react";
+import { BarChart3, CalendarDays, Settings, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const adminNav = [
   { href: "/admin/appointments", label: "Ραντεβού", icon: CalendarDays },
+  { href: "/admin/patients", label: "Ασθενείς", icon: UserRound },
   { href: "/admin/settings", label: "Ρυθμίσεις", icon: Settings },
   { href: "/admin/insights", label: "Στατιστικά", icon: BarChart3 },
 ];

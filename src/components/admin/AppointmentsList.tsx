@@ -1,6 +1,6 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { FileText, Search } from "lucide-react";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 
@@ -8,6 +8,7 @@ import {
   type AdminAppointment,
   type AppointmentStatus,
 } from "@/lib/admin/appointments";
+import { normalizePhoneSearch } from "@/lib/phone";
 
 const historyPageSize = 25;
 
@@ -44,6 +45,7 @@ export function AppointmentsList({
   const [search, setSearch] = useState("");
   const [historyPage, setHistoryPage] = useState(1);
   const normalizedSearch = search.trim().toLowerCase();
+  const normalizedPhoneSearch = normalizePhoneSearch(search);
   const now = new Date();
 
   const filteredAppointments = useMemo(() => {
@@ -56,13 +58,17 @@ export function AppointmentsList({
         appointment.patient_name,
         appointment.patient_phone,
         appointment.patient_email,
+        normalizePhoneSearch(appointment.patient_phone),
       ]
         .join(" ")
         .toLowerCase();
 
-      return searchable.includes(normalizedSearch);
+      return (
+        searchable.includes(normalizedSearch) ||
+        Boolean(normalizedPhoneSearch && searchable.includes(normalizedPhoneSearch))
+      );
     });
-  }, [appointments, normalizedSearch]);
+  }, [appointments, normalizedPhoneSearch, normalizedSearch]);
 
   const upcoming = filteredAppointments.filter((appointment) => new Date(appointment.end_at) >= now);
   const past = filteredAppointments.filter((appointment) => new Date(appointment.end_at) < now);
@@ -194,6 +200,7 @@ function AppointmentRow({
   const timeRange = `${time}-${endTime}`;
   const treatment = appointment.appointment_types?.name_el ?? "Άλλη θεραπεία";
   const isToday = localDate === today;
+  const hasPatientNotes = Boolean(appointment.patients?.notes?.trim());
 
   return (
     <article className="grid grid-cols-2 gap-x-4 gap-y-3 px-5 py-4 transition hover:bg-surface-low xl:grid-cols-[90px_110px_1.25fr_1fr_120px_150px] xl:items-center xl:gap-4">
@@ -215,7 +222,19 @@ function AppointmentRow({
 
       <div className="min-w-0">
         <p className="label-caps mb-1 text-[10px] text-muted xl:hidden">Ασθενής</p>
-        <p className="truncate text-sm font-semibold">{appointment.patient_name}</p>
+        <div className="flex min-w-0 items-center gap-2">
+          <p className="truncate text-sm font-semibold">{appointment.patient_name}</p>
+          {hasPatientNotes ? (
+            <a
+              href={`/admin/patients?patient=${appointment.patients?.id}`}
+              title="Υπάρχουν σημειώσεις ασθενή"
+              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-accent/30 bg-champagne/30 text-accent transition hover:border-accent hover:bg-champagne"
+            >
+              <FileText size={13} aria-hidden="true" />
+              <span className="sr-only">Υπάρχουν σημειώσεις ασθενή</span>
+            </a>
+          ) : null}
+        </div>
         <p className="mt-1 truncate text-xs text-muted">{appointment.patient_phone}</p>
         <a
           href={`mailto:${appointment.patient_email}`}

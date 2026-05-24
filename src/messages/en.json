@@ -143,7 +143,7 @@
     "cookiesTitle": "Cookie Policy",
     "eyebrow": "Legal placeholder",
     "notice": "This text is a placeholder and must be reviewed by a qualified legal professional before production use.",
-    "privacyBody": "This website will collect the minimum information needed to manage appointment requests, clinic communication, and secure administration. Patient account creation is not part of the initial system.",
+    "privacyBody": "This website collects the minimum information needed to manage appointment requests, clinic communication, and secure administration. The clinic may keep appointment history and internal care notes linked to a patient profile so future visits can be handled with better continuity. Patients may request access, correction, or deletion of their data where permitted by law. Patient account creation is not part of the initial system.",
     "cookiesBody": "The first version uses only essential cookies required for security, admin authentication, and basic site operation. Analytics or marketing cookies should be added only after consent logic is finalized."
   },
   "services": {
