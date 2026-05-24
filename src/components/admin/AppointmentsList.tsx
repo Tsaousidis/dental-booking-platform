@@ -15,7 +15,7 @@ const statusLabels: Record<AppointmentStatus, string> = {
   confirmed: "Επιβεβαιωμένο",
   completed: "Ολοκληρωμένο",
   cancelled: "Ακυρωμένο",
-  no_show: "No-show",
+  no_show: "Μη προσέλευση",
 };
 
 const statusStyles: Record<AppointmentStatus, string> = {
@@ -51,9 +51,17 @@ export function AppointmentsList({
       return appointments;
     }
 
-    return appointments.filter((appointment) =>
-      appointment.patient_name.toLowerCase().includes(normalizedSearch),
-    );
+    return appointments.filter((appointment) => {
+      const searchable = [
+        appointment.patient_name,
+        appointment.patient_phone,
+        appointment.patient_email,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchable.includes(normalizedSearch);
+    });
   }, [appointments, normalizedSearch]);
 
   const upcoming = filteredAppointments.filter((appointment) => new Date(appointment.end_at) >= now);
@@ -72,7 +80,7 @@ export function AppointmentsList({
             setSearch(event.target.value);
             setHistoryPage(1);
           }}
-          placeholder="Αναζήτηση με όνομα ασθενή"
+          placeholder="Αναζήτηση με όνομα, τηλέφωνο ή email"
           className="w-full bg-transparent text-sm outline-none placeholder:text-muted"
         />
       </label>

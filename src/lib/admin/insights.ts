@@ -35,9 +35,13 @@ type RawInsightAppointment = {
 
 type RawAnalyticsEvent = {
   event_type: string;
+  created_at: string;
 };
 
+export type InsightPeriod = "month" | "quarter" | "all";
+
 export type AdminInsights = {
+  period: InsightPeriod;
   metrics: {
     totalBookings: number;
     bookingsThisMonth: number;
@@ -59,8 +63,9 @@ type InsightRow = {
   value: number;
 };
 
-export async function getAdminInsights(): Promise<AdminInsights> {
+export async function getAdminInsights(period: InsightPeriod = "month"): Promise<AdminInsights> {
   const supabase = await createAuthorizedAdminClient();
+  const periodStart = getPeriodStart(period);
 
   await completePastConfirmedAppointments();
 
@@ -71,7 +76,7 @@ export async function getAdminInsights(): Promise<AdminInsights> {
       .order("start_at", { ascending: false }),
     supabase
       .from("analytics_events")
-      .select("event_type")
+      .select("event_type,created_at")
       .order("created_at", { ascending: false }),
   ]);
 
@@ -92,41 +97,71 @@ export async function getAdminInsights(): Promise<AdminInsights> {
     }),
   );
   const analyticsEvents = (analyticsResult.data ?? []) as RawAnalyticsEvent[];
-  const currentMonth = formatInTimeZone(new Date(), TIMEZONE, "yyyy-MM");
+  const periodAppointments = filterByPeriod(appointments, periodStart, "start_at");
+  const createdPeriodAppointments = filterByPeriod(appointments, periodStart, "created_at");
+  const periodAnalyticsEvents = filterByPeriod(analyticsEvents, periodStart, "created_at");
 
   return {
+    period,
     metrics: {
-      totalBookings: appointments.length,
-      bookingsThisMonth: appointments.filter(
-        (appointment) => formatInTimeZone(appointment.created_at, TIMEZONE, "yyyy-MM") === currentMonth,
-      ).length,
-      confirmed: countByStatus(appointments, "confirmed"),
-      completed: countByStatus(appointments, "completed"),
-      cancelled: countByStatus(appointments, "cancelled"),
-      noShow: countByStatus(appointments, "no_show"),
+      totalBookings: periodAppointments.length,
+      bookingsThisMonth: createdPeriodAppointments.length,
+      confirmed: countByStatus(periodAppointments, "confirmed"),
+      completed: countByStatus(periodAppointments, "completed"),
+      cancelled: countByStatus(periodAppointments, "cancelled"),
+      noShow: countByStatus(periodAppointments, "no_show"),
     },
-    bookingTrend: buildBookingTrend(appointments),
+    bookingTrend: buildBookingTrend(periodAppointments, period === "month" ? 14 : 30),
     statusBreakdown: [
-      { label: "Επιβεβαιωμένα", value: countByStatus(appointments, "confirmed") },
-      { label: "Ολοκληρωμένα", value: countByStatus(appointments, "completed") },
-      { label: "Ακυρωμένα", value: countByStatus(appointments, "cancelled") },
-      { label: "No-show", value: countByStatus(appointments, "no_show") },
+      { label: "Επιβεβαιωμένα", value: countByStatus(periodAppointments, "confirmed") },
+      { label: "Ολοκληρωμένα", value: countByStatus(periodAppointments, "completed") },
+      { label: "Ακυρωμένα", value: countByStatus(periodAppointments, "cancelled") },
+      { label: "Μη προσέλευση", value: countByStatus(periodAppointments, "no_show") },
     ],
     mostBookedServices: topRows(
-      appointments.map((appointment) => appointment.appointment_types?.name_el ?? "Άλλη θεραπεία"),
+      periodAppointments.map((appointment) => appointment.appointment_types?.name_el ?? "Άλλη θεραπεία"),
     ),
     busiestDays: topRows(
-      appointments
+      periodAppointments
         .filter((appointment) => appointment.status !== "cancelled")
         .map((appointment) => dayLabels[formatInTimeZone(appointment.start_at, TIMEZONE, "i")]),
     ),
     busiestHours: topRows(
-      appointments
+      periodAppointments
         .filter((appointment) => appointment.status !== "cancelled")
         .map((appointment) => `${formatInTimeZone(appointment.start_at, TIMEZONE, "HH")}:00`),
     ),
-    conversionEvents: topRows(analyticsEvents.map((event) => event.event_type)),
+    conversionEvents: topRows(periodAnalyticsEvents.map((event) => event.event_type)),
   };
+}
+
+function getPeriodStart(period: InsightPeriod) {
+  const now = new Date();
+
+  if (period === "all") {
+    return null;
+  }
+
+  if (period === "quarter") {
+    const date = new Date(now);
+    date.setMonth(date.getMonth() - 3);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+function filterByPeriod<T extends Record<K, string>, K extends keyof T>(
+  rows: T[],
+  periodStart: Date | null,
+  dateKey: K,
+) {
+  if (!periodStart) {
+    return rows;
+  }
+
+  return rows.filter((row) => new Date(row[dateKey]) >= periodStart);
 }
 
 function countByStatus(appointments: RawInsightAppointment[], status: AppointmentStatus) {
@@ -141,7 +176,7 @@ function buildBookingTrend(appointments: RawInsightAppointment[], days = 14): In
 
     return {
       key: formatInTimeZone(date, TIMEZONE, "yyyy-MM-dd"),
-      label: formatInTimeZone(date, TIMEZONE, "dd/MM"),
+      label: formatInTimeZone(date, TIMEZONE, "d/M"),
       value: 0,
     };
   });
