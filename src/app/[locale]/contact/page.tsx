@@ -30,7 +30,7 @@ export default async function ContactPage({
       title={dictionary.contactPage.title}
       intro={dictionary.contactPage.intro}
     >
-      <ContactContent dictionary={dictionary} />
+      <ContactContent dictionary={dictionary} locale={locale} />
     </PublicPageShell>
   );
 }

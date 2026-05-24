@@ -2,8 +2,8 @@ export const brand = {
   doctorName: "Dr. Eleni Markou",
   clinicName: "Athenian Dental Studio",
   city: "Athens",
-  phone: "+30 210 0000000",
-  email: "clinic@example.com",
+  phone: "+30 210 724 8820",
+  email: "hello@atheniandentalstudio.gr",
   address: "Kolonaki, Athens",
   timezone: "Europe/Athens",
   colors: {
