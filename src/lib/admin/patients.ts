@@ -32,41 +32,64 @@ export type AdminPatient = {
 };
 
 type RawAdminPatient = Omit<AdminPatient, "appointments"> & {
-  appointments:
-    | (Omit<AdminPatientAppointment, "appointment_types"> & {
-        appointment_types:
-          | AdminPatientAppointment["appointment_types"]
-          | NonNullable<AdminPatientAppointment["appointment_types"]>[];
-      })[]
-    | null;
+  appointments?: AdminPatientAppointment[];
+};
+
+type RawPatientAppointment = Omit<AdminPatientAppointment, "appointment_types"> & {
+  patient_id: string | null;
+  appointment_types:
+    | AdminPatientAppointment["appointment_types"]
+    | NonNullable<AdminPatientAppointment["appointment_types"]>[];
 };
 
 export async function getAdminPatients() {
   const supabase = await createAuthorizedAdminClient();
   const { data, error } = await supabase
     .from("patients")
-    .select(
-      "id,display_name,email,phone,normalized_phone,notes,created_at,updated_at,appointments(id,patient_note,start_at,end_at,status,appointment_types(name_el,name_en))",
-    )
+    .select("id,display_name,email,phone,normalized_phone,notes,created_at,updated_at")
     .order("updated_at", { ascending: false });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return ((data ?? []) as unknown as RawAdminPatient[]).map((patient) => ({
-    ...patient,
-    appointments: (patient.appointments ?? [])
-      .map((appointment) => ({
+  const patients = (data ?? []) as unknown as RawAdminPatient[];
+  const patientIds = patients.map((patient) => patient.id);
+
+  if (patientIds.length === 0) {
+    return [];
+  }
+
+  const appointmentsResult = await supabase
+    .from("appointments")
+    .select("id,patient_id,patient_note,start_at,end_at,status,appointment_types(name_el,name_en)")
+    .in("patient_id", patientIds);
+
+  const appointmentsByPatientId = new Map<string, AdminPatientAppointment[]>();
+
+  if (!appointmentsResult.error) {
+    ((appointmentsResult.data ?? []) as unknown as RawPatientAppointment[]).forEach((appointment) => {
+      if (!appointment.patient_id) {
+        return;
+      }
+
+      const patientAppointments = appointmentsByPatientId.get(appointment.patient_id) ?? [];
+      patientAppointments.push({
         ...appointment,
         appointment_types: Array.isArray(appointment.appointment_types)
           ? appointment.appointment_types[0] ?? null
           : appointment.appointment_types,
-      }))
-      .sort(
-        (first, second) =>
-          new Date(second.start_at).getTime() - new Date(first.start_at).getTime(),
-      ),
+      });
+      appointmentsByPatientId.set(appointment.patient_id, patientAppointments);
+    });
+  }
+
+  return patients.map((patient) => ({
+    ...patient,
+    appointments: (appointmentsByPatientId.get(patient.id) ?? []).sort(
+      (first, second) =>
+        new Date(second.start_at).getTime() - new Date(first.start_at).getTime(),
+    ),
   }));
 }
 
@@ -122,4 +145,3 @@ export function buildPatientSearchText(patient: AdminPatient) {
     .join(" ")
     .toLowerCase();
 }
-

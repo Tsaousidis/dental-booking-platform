@@ -33,25 +33,67 @@ export async function getAdminAppointments() {
 
   await completePastConfirmedAppointments();
 
-  const { data, error } = await supabase
+  let canLoadPatientNotes = true;
+  let appointmentsResult = (await supabase
     .from("appointments")
     .select(
-      "id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,status,google_event_id,patients(id,notes),appointment_types(name_el,name_en,duration_minutes)",
+      "id,patient_id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,status,google_event_id,appointment_types(name_el,name_en,duration_minutes)",
     )
-    .order("start_at", { ascending: true });
+    .order("start_at", { ascending: true })) as AdminAppointmentsQueryResult;
 
-  if (error) {
-    throw new Error(error.message);
+  if (appointmentsResult.error && appointmentsResult.error.message.includes("patient_id")) {
+    canLoadPatientNotes = false;
+    appointmentsResult = (await supabase
+      .from("appointments")
+      .select(
+        "id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,status,google_event_id,appointment_types(name_el,name_en,duration_minutes)",
+      )
+      .order("start_at", { ascending: true })) as AdminAppointmentsQueryResult;
   }
 
-  return ((data ?? []) as unknown as RawAdminAppointment[]).map((appointment) => ({
+  if (appointmentsResult.error) {
+    throw new Error(appointmentsResult.error.message);
+  }
+
+  const appointments = ((appointmentsResult.data ?? []) as unknown as RawAdminAppointment[]).map((appointment) => ({
     ...appointment,
     appointment_types: Array.isArray(appointment.appointment_types)
       ? appointment.appointment_types[0] ?? null
       : appointment.appointment_types,
-    patients: Array.isArray(appointment.patients)
-      ? appointment.patients[0] ?? null
-      : appointment.patients,
+    patients: null,
+  }));
+
+  if (!canLoadPatientNotes) {
+    return appointments;
+  }
+
+  const patientIds = [
+    ...new Set(
+      appointments
+        .map((appointment) => appointment.patient_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  if (patientIds.length === 0) {
+    return appointments;
+  }
+
+  const { data: patients } = await supabase
+    .from("patients")
+    .select("id,notes")
+    .in("id", patientIds);
+
+  const patientsById = new Map(
+    ((patients ?? []) as NonNullable<AdminAppointment["patients"]>[]).map((patient) => [
+      patient.id,
+      patient,
+    ]),
+  );
+
+  return appointments.map((appointment) => ({
+    ...appointment,
+    patients: appointment.patient_id ? patientsById.get(appointment.patient_id) ?? null : null,
   }));
 }
 
@@ -108,11 +150,14 @@ export async function updateAppointmentStatus(formData: FormData) {
   revalidatePath("/admin/appointments");
 }
 
-type RawAdminAppointment = Omit<AdminAppointment, "appointment_types"> & {
+type RawAdminAppointment = Omit<AdminAppointment, "appointment_types" | "patients"> & {
+  patient_id?: string | null;
   appointment_types:
     | AdminAppointment["appointment_types"]
     | NonNullable<AdminAppointment["appointment_types"]>[];
-  patients:
-    | AdminAppointment["patients"]
-    | NonNullable<AdminAppointment["patients"]>[];
+};
+
+type AdminAppointmentsQueryResult = {
+  data: unknown[] | null;
+  error: { message: string } | null;
 };
