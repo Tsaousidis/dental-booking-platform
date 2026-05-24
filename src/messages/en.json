@@ -9,8 +9,8 @@
   },
   "home": {
     "heroEyebrow": "Private dental clinic in Athens",
-    "heroTitle": "Premium dental care with calm, clinical precision.",
-    "heroSubtitle": "Cosmetic dentistry, implants, and everyday care in a modern setting, with instant online booking and a personal approach.",
+    "heroTitle": "Dental implants, whitening, and cosmetic dentistry in Athens.",
+    "heroSubtitle": "From checkups and cleanings to implants, veneers, and whitening, the clinic offers clear guidance, a calmer visit, and easy online appointment booking.",
     "bookButton": "Book appointment",
     "secondaryButton": "View services",
     "doctorEyebrow": "The doctor",
@@ -19,9 +19,12 @@
     "servicesEyebrow": "Services",
     "servicesTitle": "Treatments designed for health, function, and a natural result.",
     "reviewsEyebrow": "Patient experience",
-    "reviewsTitle": "Calm care, clear communication, and results that feel natural.",
+    "reviewsTitle": "Real patient experiences from people who felt comfortable from the first visit.",
     "ctaTitle": "Ready to schedule your visit?",
-    "ctaBody": "Choose a treatment, day, and time through a simple mobile-first flow."
+    "ctaBody": "Book your appointment in a few minutes, without phone calls or waiting. You will receive confirmation with all details by email.",
+    "statsYears": "Years of experience",
+    "statsPatients": "Patients",
+    "statsAwards": "Awards"
   },
   "aboutPage": {
     "eyebrow": "About the doctor",
@@ -94,6 +97,11 @@
     "first": "An exceptionally calm experience, with clear explanations at every step.",
     "second": "The space feels clean and luxurious without becoming cold.",
     "third": "Online booking was quick and the appointment started exactly on time."
+  },
+  "reviewAuthors": {
+    "first": "Maria K.",
+    "second": "Nikos P.",
+    "third": "Eleni A."
   },
   "footer": {
     "tagline": "Premium dental care in Athens.",

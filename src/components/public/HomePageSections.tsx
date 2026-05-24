@@ -18,7 +18,7 @@ export function HomePageSections({
     <>
       <section className="relative min-h-[calc(100vh-80px)] overflow-hidden border-b border-line/30">
         <div className="absolute inset-0 z-0">
-          <div className="h-full w-full bg-[url('https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1800&q=85')] bg-cover bg-center" />
+          <div className="h-full w-full bg-[url('https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=1800&q=85')] bg-cover bg-center" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(250,249,247,0.95),rgba(250,249,247,0.64),rgba(250,249,247,0.16))]" />
         </div>
 
@@ -51,7 +51,7 @@ export function HomePageSections({
       </section>
 
       <section className="mx-auto grid w-full max-w-7xl gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:py-28">
-        <div className="aspect-[4/5] overflow-hidden rounded-lg bg-surface-container bg-[url('https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=1100&q=85')] bg-cover bg-center ambient-shadow" />
+        <div className="aspect-[4/5] overflow-hidden rounded-lg bg-surface-container bg-[url('https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1100&q=85')] bg-cover bg-center ambient-shadow" />
         <div className="flex flex-col justify-center">
           <p className="label-caps text-accent">{dictionary.home.doctorEyebrow}</p>
           <h2 className="mt-4 max-w-3xl text-4xl font-light leading-tight sm:text-6xl">
@@ -62,9 +62,9 @@ export function HomePageSections({
           </p>
           <div className="mt-10 grid grid-cols-3 gap-6 border-t border-line/60 pt-8">
             {[
-              ["15+", "Years Exp."],
-              ["5k+", "Patients"],
-              ["12", "Awards"],
+              ["15+", dictionary.home.statsYears],
+              ["5k+", dictionary.home.statsPatients],
+              ["12", dictionary.home.statsAwards],
             ].map(([value, label]) => (
               <div key={label}>
                 <p className="text-2xl font-semibold text-accent">{value}</p>
@@ -126,7 +126,9 @@ export function HomePageSections({
               <blockquote className="text-base leading-7 text-muted">
                 &ldquo;{dictionary.reviews[review]}&rdquo;
               </blockquote>
-              <figcaption className="label-caps mt-8 text-accent">Verified patient</figcaption>
+              <figcaption className="label-caps mt-8 text-accent">
+                {dictionary.reviewAuthors[review]}
+              </figcaption>
             </figure>
           ))}
         </div>
