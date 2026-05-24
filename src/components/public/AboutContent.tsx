@@ -1,4 +1,4 @@
-import { Award, HeartPulse, ShieldCheck } from "lucide-react";
+import { Award, GraduationCap, HeartPulse, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { type Dictionary } from "@/lib/i18n";
@@ -11,10 +11,32 @@ export function AboutContent({ dictionary }: { dictionary: Dictionary }) {
     dictionary.aboutPage.credentialTwo,
     dictionary.aboutPage.credentialThree,
   ];
+  const profileSections = [
+    {
+      title: dictionary.aboutPage.educationTitle,
+      icon: GraduationCap,
+      items: [dictionary.aboutPage.educationOne, dictionary.aboutPage.educationTwo],
+    },
+    {
+      title: dictionary.aboutPage.specialtiesTitle,
+      icon: Sparkles,
+      items: [dictionary.aboutPage.specialtyOne, dictionary.aboutPage.specialtyTwo],
+    },
+    {
+      title: dictionary.aboutPage.membershipsTitle,
+      icon: UsersRound,
+      items: [dictionary.aboutPage.membershipOne, dictionary.aboutPage.membershipTwo],
+    },
+    {
+      title: dictionary.aboutPage.experienceTitle,
+      icon: Award,
+      items: [dictionary.aboutPage.experienceOne, dictionary.aboutPage.experienceTwo],
+    },
+  ];
 
   return (
     <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
-      <div className="min-h-[520px] rounded-lg border border-line/40 bg-[linear-gradient(180deg,rgba(255,255,255,0.12),rgba(250,249,247,0.72)),url('https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=1100&q=80')] bg-cover bg-center ambient-shadow" />
+      <div className="min-h-[520px] rounded-lg border border-line/40 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(250,249,247,0.56)),url('https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1100&q=80')] bg-cover bg-center ambient-shadow" />
 
       <div className="space-y-8">
         <div className="rounded-lg border border-line/50 bg-surface p-6 ambient-shadow sm:p-8">
@@ -33,6 +55,28 @@ export function AboutContent({ dictionary }: { dictionary: Dictionary }) {
               );
             })}
           </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {profileSections.map((section) => {
+            const Icon = section.icon;
+
+            return (
+              <article key={section.title} className="rounded-lg border border-line/50 bg-background p-6">
+                <div className="flex items-center gap-3">
+                  <Icon className="text-accent" size={20} aria-hidden="true" />
+                  <h2 className="text-xl font-medium">{section.title}</h2>
+                </div>
+                <ul className="mt-5 space-y-3 text-sm leading-6 text-muted">
+                  {section.items.map((item) => (
+                    <li key={item} className="border-t border-line/50 pt-3">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            );
+          })}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
