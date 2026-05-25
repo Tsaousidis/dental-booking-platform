@@ -222,6 +222,7 @@ export async function POST(request: Request) {
       id: appointment.id,
       startAt: appointment.start_at,
       endAt: appointment.end_at,
+      confirmationUrl: `/${input.locale}/booking/confirmed?token=${appointment.cancel_token}`,
     },
   });
 }

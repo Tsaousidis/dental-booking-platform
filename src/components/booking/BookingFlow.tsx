@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { type Locale } from "@/config/locales";
@@ -136,6 +137,7 @@ export function BookingFlow({
   appointmentTypes: PublicAppointmentType[];
 }) {
   const copy = copyByLocale[locale];
+  const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [selectedTypeId, setSelectedTypeId] = useState(appointmentTypes[0]?.id ?? "");
   const [availableDays, setAvailableDays] = useState<AvailableDay[]>([]);
@@ -278,6 +280,11 @@ export function BookingFlow({
     if (!response.ok) {
       setSubmitError(payload?.error ?? copy.bookingError);
       setIsSubmitting(false);
+      return;
+    }
+
+    if (payload?.appointment?.confirmationUrl) {
+      router.push(payload.appointment.confirmationUrl);
       return;
     }
 
