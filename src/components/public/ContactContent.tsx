@@ -17,6 +17,7 @@ export function ContactContent({
 }) {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const copy = dictionary.contactPage;
+  const address = brand.localizedAddress[locale].fullAddress;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,9 +52,18 @@ export function ContactContent({
     <div className="space-y-10">
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="grid gap-4">
-          <InfoRow icon={MapPin} label={copy.addressLabel} value={`${brand.address}, ${brand.city}`} />
+          <InfoRow icon={MapPin} label={copy.addressLabel} value={address} />
           <InfoRow icon={Phone} label={copy.phoneLabel} value={brand.phone} />
           <InfoRow icon={Mail} label={copy.emailLabel} value={brand.email} />
+          <div className="overflow-hidden rounded-lg border border-line/50 bg-surface ambient-shadow">
+            <iframe
+              title={copy.mapTitle}
+              src={`https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
+              className="h-64 w-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
           <div className="rounded-lg border border-line/50 bg-surface p-6 ambient-shadow">
             <div className="flex items-start gap-4">
               <Clock className="mt-1 text-accent" size={22} aria-hidden="true" />

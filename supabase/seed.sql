@@ -11,8 +11,8 @@ insert into public.doctor_profile (
   'Athenian Dental Studio',
   'clinic@example.com',
   '+30 210 0000000',
-  'Kolonaki, Athens',
-  'Athens',
+  'Κουμπάρη 1, Αθήνα 106 74, Ελλάδα',
+  'Αθήνα 106 74',
   'Europe/Athens'
 );
 

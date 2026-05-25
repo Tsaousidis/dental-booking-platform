@@ -2,6 +2,7 @@ import "server-only";
 
 import { formatInTimeZone } from "date-fns-tz";
 
+import { brand } from "@/config/brand";
 import { type Locale } from "@/config/locales";
 import { site } from "@/config/site";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -101,11 +102,30 @@ export async function getConfirmedAppointmentDetails({
     clinicName: doctorProfile?.clinic_name ?? site.name,
     clinicEmail: doctorProfile?.email ?? null,
     clinicPhone: doctorProfile?.phone ?? null,
-    clinicAddress: doctorProfile?.address ?? null,
+    clinicAddress: getLocalizedClinicAddress(doctorProfile?.address ?? null, locale),
     status: appointment.status,
     cancelUrl: `/${locale}/booking/cancel?token=${appointment.cancel_token}`,
     rescheduleUrl: `/${locale}/booking/reschedule?token=${appointment.reschedule_token}`,
   };
+}
+
+function getLocalizedClinicAddress(address: string | null, locale: Locale) {
+  if (!address) {
+    return null;
+  }
+
+  const defaultAddresses = new Set([
+    brand.fullAddress,
+    brand.localizedAddress.el.fullAddress,
+    brand.localizedAddress.en.fullAddress,
+    "Koumpari 1, Athina 106 74, Greece",
+  ]);
+
+  if (defaultAddresses.has(address)) {
+    return brand.localizedAddress[locale].fullAddress;
+  }
+
+  return address;
 }
 
 function formatAppointmentRange(startAt: string, endAt: string) {
@@ -115,4 +135,3 @@ function formatAppointmentRange(startAt: string, endAt: string) {
 
   return `${date}, ${start}-${end}`;
 }
-

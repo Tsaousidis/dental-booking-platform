@@ -26,7 +26,7 @@ export function PublicFooter({
         </div>
         <div className="text-sm leading-7 text-muted">
           <p className="font-medium text-foreground">{brand.doctorName}</p>
-          <p>{brand.address}</p>
+          <p>{brand.localizedAddress[locale].fullAddress}</p>
           <p>{brand.phone}</p>
           <p>{brand.email}</p>
         </div>

@@ -13,6 +13,7 @@ export function StructuredData() {
       "@type": "PostalAddress",
       streetAddress: brand.address,
       addressLocality: brand.city,
+      postalCode: brand.postalCode,
       addressCountry: "GR",
     },
     areaServed: brand.city,
