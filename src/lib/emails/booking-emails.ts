@@ -21,6 +21,7 @@ type BookingEmailInput = {
   rescheduleUrl?: string;
   previousStartAt?: string;
   previousEndAt?: string;
+  reviewUrl?: string;
 };
 
 export async function sendPatientBookingConfirmation(input: BookingEmailInput) {
@@ -208,6 +209,58 @@ export async function sendDoctorReminderEmail(input: BookingEmailInput) {
       `Θεραπεία: ${input.appointmentTypeName}`,
       `Ημερομηνία / ώρα: ${appointmentTime}`,
       `Σημείωση: ${input.patientNote || "-"}`,
+    ].join("\n"),
+  });
+}
+
+export async function sendPatientReviewRequestEmail(input: BookingEmailInput) {
+  const client = getEmailClient();
+
+  if (!client) {
+    return { skipped: true };
+  }
+
+  const isGreek = input.locale === "el";
+  const subject = isGreek
+    ? `Πώς ήταν η επίσκεψή σας; - ${input.clinicName}`
+    : `How was your visit? - ${input.clinicName}`;
+  const appointmentTime = formatAppointmentTime(input.startAt, input.endAt);
+  const reviewUrl = input.reviewUrl ?? "https://www.google.com/search?q=Google+Reviews";
+
+  return client.resend.emails.send({
+    from: client.from,
+    to: input.patientEmail,
+    subject,
+    html: emailHtml({
+      title: subject,
+      greeting: isGreek ? `Γεια σας ${input.patientName},` : `Hello ${input.patientName},`,
+      body: isGreek
+        ? "Ελπίζουμε η επίσκεψή σας να ήταν άνετη και χρήσιμη. Αν έχετε ένα λεπτό, η αξιολόγησή σας μας βοηθά να βελτιώνουμε τη φροντίδα μας."
+        : "We hope your visit was comfortable and helpful. If you have a minute, your review helps us improve our care.",
+      rows: [
+        [isGreek ? "Θεραπεία" : "Treatment", input.appointmentTypeName],
+        [isGreek ? "Ημερομηνία / ώρα" : "Date / time", appointmentTime],
+        [isGreek ? "Κλινική" : "Clinic", input.clinicName],
+      ],
+      actions: [
+        {
+          label: isGreek ? "Αφήστε αξιολόγηση στο Google" : "Leave a Google review",
+          href: reviewUrl,
+          variant: "primary",
+        },
+      ],
+      actionsIntro: isGreek
+        ? "Ο σύνδεσμος οδηγεί στη σελίδα αξιολογήσεων της κλινικής."
+        : "The link opens the clinic's review page.",
+    }),
+    text: [
+      isGreek ? `Γεια σας ${input.patientName},` : `Hello ${input.patientName},`,
+      isGreek
+        ? "Ελπίζουμε η επίσκεψή σας να ήταν άνετη και χρήσιμη."
+        : "We hope your visit was comfortable and helpful.",
+      `${isGreek ? "Θεραπεία" : "Treatment"}: ${input.appointmentTypeName}`,
+      `${isGreek ? "Ημερομηνία / ώρα" : "Date / time"}: ${appointmentTime}`,
+      `${isGreek ? "Αξιολόγηση" : "Review"}: ${reviewUrl}`,
     ].join("\n"),
   });
 }

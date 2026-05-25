@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import {
   sendDoctorReminderEmail,
   sendPatientReminderEmail,
+  sendPatientReviewRequestEmail,
 } from "@/lib/emails/booking-emails";
 import { getRequestIp } from "@/lib/security/request-ip";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -17,6 +18,25 @@ type ReminderAppointment = {
   end_at: string;
   patient_reminder_sent_at: string | null;
   doctor_reminder_sent_at: string | null;
+  appointment_types:
+    | {
+        name_el: string;
+      }
+    | {
+        name_el: string;
+      }[]
+    | null;
+};
+
+type ReviewRequestAppointment = {
+  id: string;
+  patient_name: string;
+  patient_email: string;
+  patient_phone: string;
+  patient_note: string | null;
+  start_at: string;
+  end_at: string;
+  patient_review_request_sent_at: string | null;
   appointment_types:
     | {
         name_el: string;
@@ -45,7 +65,7 @@ export async function POST(request: Request) {
     supabase
       .from("notification_settings")
       .select(
-        "patient_reminder_email_enabled,doctor_reminder_email_enabled,reminder_hours_before",
+        "patient_reminder_email_enabled,doctor_reminder_email_enabled,patient_review_request_email_enabled,reminder_hours_before",
       )
       .order("created_at", { ascending: true })
       .limit(1)
@@ -160,12 +180,19 @@ export async function POST(request: Request) {
     }
   }
 
+  const reviewRequestsSent = settings.patient_review_request_email_enabled
+    ? await sendReviewRequests({
+        clinicName: profile.clinic_name ?? "Dental Clinic",
+      })
+    : 0;
+
   return NextResponse.json({
     ok: true,
     completedPastAppointments,
     processed: appointments.length,
     patientRemindersSent,
     doctorRemindersSent,
+    reviewRequestsSent,
   });
 }
 
@@ -213,4 +240,66 @@ function wasEmailAccepted(result: unknown) {
   }
 
   return true;
+}
+
+async function sendReviewRequests({ clinicName }: { clinicName: string }) {
+  const supabase = createAdminClient();
+  const now = new Date();
+  const windowStart = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+  const windowEnd = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select(
+      "id,patient_name,patient_email,patient_phone,patient_note,start_at,end_at,patient_review_request_sent_at,appointment_types(name_el)",
+    )
+    .eq("status", "completed")
+    .is("patient_review_request_sent_at", null)
+    .gte("end_at", windowStart.toISOString())
+    .lte("end_at", windowEnd.toISOString())
+    .order("end_at", { ascending: true })
+    .limit(50);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const appointments = ((data ?? []) as unknown as ReviewRequestAppointment[]).map(
+    (appointment) => ({
+      ...appointment,
+      appointment_types: Array.isArray(appointment.appointment_types)
+        ? appointment.appointment_types[0] ?? null
+        : appointment.appointment_types,
+    }),
+  );
+
+  let reviewRequestsSent = 0;
+  const reviewUrl =
+    process.env.GOOGLE_REVIEW_URL ?? "https://www.google.com/search?q=Google+Reviews";
+
+  for (const appointment of appointments) {
+    const result = await sendPatientReviewRequestEmail({
+      locale: "el",
+      clinicName,
+      doctorEmail: "",
+      appointmentTypeName: appointment.appointment_types?.name_el ?? "Άλλη θεραπεία",
+      patientName: appointment.patient_name,
+      patientEmail: appointment.patient_email,
+      patientPhone: appointment.patient_phone,
+      patientNote: appointment.patient_note,
+      startAt: appointment.start_at,
+      endAt: appointment.end_at,
+      reviewUrl,
+    });
+
+    if (wasEmailAccepted(result)) {
+      await supabase
+        .from("appointments")
+        .update({ patient_review_request_sent_at: new Date().toISOString() })
+        .eq("id", appointment.id);
+      reviewRequestsSent += 1;
+    }
+  }
+
+  return reviewRequestsSent;
 }

@@ -74,6 +74,7 @@ export type NotificationSettings = {
   patient_reminder_email_enabled: boolean;
   patient_cancellation_email_enabled: boolean;
   patient_reschedule_email_enabled: boolean;
+  patient_review_request_email_enabled: boolean;
   reminder_hours_before: number;
 };
 
@@ -204,6 +205,8 @@ export async function saveAdminSettings(formData: FormData) {
           formData.get("patient_cancellation_email_enabled") === "on",
         patient_reschedule_email_enabled:
           formData.get("patient_reschedule_email_enabled") === "on",
+        patient_review_request_email_enabled:
+          formData.get("patient_review_request_email_enabled") === "on",
         reminder_hours_before: getPositiveInteger(formData, "reminder_hours_before"),
       }
     : null;

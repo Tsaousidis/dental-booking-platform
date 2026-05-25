@@ -265,6 +265,11 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
                   name="patient_reschedule_email_enabled"
                   defaultChecked={notificationSettings.patient_reschedule_email_enabled}
                 />
+                <ToggleField
+                  label="Αίτημα αξιολόγησης μετά την επίσκεψη"
+                  name="patient_review_request_email_enabled"
+                  defaultChecked={notificationSettings.patient_review_request_email_enabled}
+                />
               </div>
             </div>
 
