@@ -261,6 +261,7 @@ function AppointmentRow({
       <form ref={formRef} action={updateStatusAction} className="flex xl:justify-end">
         <input type="hidden" name="appointment_id" value={appointment.id} />
         <select
+          key={appointment.status}
           name="status"
           defaultValue={appointment.status}
           aria-label="Αλλαγή status"

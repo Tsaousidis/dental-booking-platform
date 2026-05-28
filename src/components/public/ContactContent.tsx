@@ -4,20 +4,25 @@ import { ArrowRight, Clock, Mail, MapPin, Phone, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import { brand } from "@/config/brand";
 import { type Locale } from "@/config/locales";
 import { type Dictionary } from "@/lib/i18n";
 
 export function ContactContent({
   dictionary,
   locale,
+  clinicProfile,
 }: {
   dictionary: Dictionary;
   locale: Locale;
+  clinicProfile: {
+    address: string;
+    phone: string;
+    email: string;
+  };
 }) {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const copy = dictionary.contactPage;
-  const address = brand.localizedAddress[locale].fullAddress;
+  const address = clinicProfile.address;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,8 +58,8 @@ export function ContactContent({
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="grid gap-4">
           <InfoRow icon={MapPin} label={copy.addressLabel} value={address} />
-          <InfoRow icon={Phone} label={copy.phoneLabel} value={brand.phone} />
-          <InfoRow icon={Mail} label={copy.emailLabel} value={brand.email} />
+          <InfoRow icon={Phone} label={copy.phoneLabel} value={clinicProfile.phone} />
+          <InfoRow icon={Mail} label={copy.emailLabel} value={clinicProfile.email} />
           <div className="overflow-hidden rounded-lg border border-line/50 bg-surface ambient-shadow">
             <iframe
               title={copy.mapTitle}

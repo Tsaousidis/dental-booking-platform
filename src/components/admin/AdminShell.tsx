@@ -25,11 +25,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-8 sm:px-8 xl:grid-cols-[220px_1fr]">
+      <div className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-8 sm:px-8 xl:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="min-w-0 xl:sticky xl:top-28 xl:self-start">
           <AdminNav />
         </aside>
-        <main>{children}</main>
+        <main className="min-w-0">{children}</main>
       </div>
     </div>
   );

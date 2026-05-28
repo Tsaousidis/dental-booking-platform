@@ -1,17 +1,19 @@
 import Link from "next/link";
 
-import { brand } from "@/config/brand";
 import { type Locale } from "@/config/locales";
 import { type Dictionary } from "@/lib/i18n";
+import { type PublicClinicProfile } from "@/lib/public/clinic-profile";
 
 import { BrandMark } from "./BrandMark";
 
 export function PublicFooter({
   locale,
   dictionary,
+  clinicProfile,
 }: {
   locale: Locale;
   dictionary: Dictionary;
+  clinicProfile: PublicClinicProfile;
 }) {
   return (
     <footer className="border-t border-line/30 bg-surface py-16 text-foreground">
@@ -25,10 +27,10 @@ export function PublicFooter({
           </p>
         </div>
         <div className="text-sm leading-7 text-muted">
-          <p className="font-medium text-foreground">{brand.doctorName}</p>
-          <p>{brand.localizedAddress[locale].fullAddress}</p>
-          <p>{brand.phone}</p>
-          <p>{brand.email}</p>
+          <p className="font-medium text-foreground">{clinicProfile.doctorName}</p>
+          <p>{clinicProfile.address}</p>
+          <p>{clinicProfile.phone}</p>
+          <p>{clinicProfile.email}</p>
         </div>
         <div className="text-sm leading-7">
           <p className="font-medium text-foreground">{dictionary.footer.legal}</p>

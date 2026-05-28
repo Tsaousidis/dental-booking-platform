@@ -1,22 +1,26 @@
 import { brand } from "@/config/brand";
 import { absoluteUrl } from "@/lib/seo";
+import { type PublicClinicProfile } from "@/lib/public/clinic-profile";
 
-export function StructuredData() {
+export function StructuredData({
+  clinicProfile,
+}: {
+  clinicProfile: PublicClinicProfile;
+}) {
   const data = {
     "@context": "https://schema.org",
     "@type": "Dentist",
-    name: brand.clinicName,
+    name: clinicProfile.clinicName,
     url: absoluteUrl("/el"),
-    telephone: brand.phone,
-    email: brand.email,
+    telephone: clinicProfile.phone,
+    email: clinicProfile.email,
     address: {
       "@type": "PostalAddress",
-      streetAddress: brand.address,
-      addressLocality: brand.city,
-      postalCode: brand.postalCode,
+      streetAddress: clinicProfile.address,
+      addressLocality: clinicProfile.city,
       addressCountry: "GR",
     },
-    areaServed: brand.city,
+    areaServed: clinicProfile.city || brand.city,
     medicalSpecialty: "Dentistry",
     priceRange: "$$$",
   };

@@ -62,11 +62,14 @@ export default async function AdminInsightsPage({
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {metricLabels.map(([label, key, display, helper]) => (
-          <section key={key} className="rounded-lg border border-line bg-surface p-5 ambient-shadow">
+          <section
+            key={key}
+            className="flex min-h-44 flex-col items-center justify-center rounded-lg border border-line bg-surface p-5 text-center ambient-shadow"
+          >
             <p className="text-sm text-muted">{label}</p>
             <p className="mt-4 text-3xl font-semibold">{insights.metrics[key]}</p>
             {display === "status" ? (
-              <div className="mt-5">
+              <div className="mt-5 flex justify-center">
                 <MiniDonut
                   value={insights.metrics[key]}
                   total={Math.max(insights.metrics.totalBookings, 1)}
@@ -75,7 +78,7 @@ export default async function AdminInsightsPage({
                 />
               </div>
             ) : (
-              <p className="mt-4 min-h-10 text-xs leading-5 text-muted">{helper}</p>
+              <p className="mt-4 min-h-10 max-w-56 text-xs leading-5 text-muted">{helper}</p>
             )}
           </section>
         ))}
@@ -165,7 +168,7 @@ function MiniDonut({
   const strokeDasharray = `${circumference * ratio} ${circumference}`;
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center justify-center gap-4">
       <svg viewBox="0 0 44 44" className="h-16 w-16 -rotate-90" aria-label={label}>
         <circle cx="22" cy="22" r={radius} fill="none" stroke="rgba(23,23,23,0.12)" strokeWidth="5" />
         <circle
@@ -179,7 +182,7 @@ function MiniDonut({
           strokeDasharray={strokeDasharray}
         />
       </svg>
-      <div>
+      <div className="text-left">
         <p className="text-base font-semibold">{value === 0 ? "Καμία" : `${Math.round(ratio * 100)}%`}</p>
         <p className="text-xs leading-5 text-muted">{helper}</p>
       </div>

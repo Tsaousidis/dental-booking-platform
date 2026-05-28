@@ -56,7 +56,7 @@ export function HomePageSections({
 
       <section className="mx-auto grid w-full max-w-7xl gap-12 px-5 py-20 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:py-28">
         <div
-          className="aspect-[4/5] overflow-hidden rounded-lg bg-surface-container bg-cover bg-center ambient-shadow"
+          className="hidden aspect-[4/5] overflow-hidden rounded-lg bg-surface-container bg-cover bg-center ambient-shadow md:block"
           style={{ backgroundImage: `url("${brand.doctorImageUrl}")` }}
         />
         <div className="flex flex-col justify-center">
@@ -97,7 +97,30 @@ export function HomePageSections({
               <ArrowRight size={17} aria-hidden="true" />
             </Link>
           </div>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-8 divide-y divide-line/50 overflow-hidden rounded-lg border border-line/50 bg-background sm:hidden">
+            {serviceKeys.map((service, index) => (
+              <Link
+                key={service}
+                href={`/${locale}/services`}
+                className="group flex min-h-16 items-center justify-between gap-4 px-4 py-4 transition hover:bg-surface"
+              >
+                <div className="flex min-w-0 items-center gap-4">
+                  <span className="label-caps w-8 shrink-0 text-accent/50">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span className="truncate text-base font-semibold">
+                    {dictionary.services[service]}
+                  </span>
+                </div>
+                <ArrowRight
+                  className="shrink-0 text-champagne transition group-hover:translate-x-1 group-hover:text-accent"
+                  size={17}
+                  aria-hidden="true"
+                />
+              </Link>
+            ))}
+          </div>
+          <div className="mt-12 hidden gap-6 sm:grid sm:grid-cols-2 lg:grid-cols-5">
             {serviceKeys.map((service, index) => (
               <Link
                 key={service}

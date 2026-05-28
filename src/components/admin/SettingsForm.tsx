@@ -3,6 +3,7 @@ import { Save } from "lucide-react";
 import Link from "next/link";
 
 import { AppointmentTypesOrderList } from "@/components/admin/AppointmentTypesOrderList";
+import { DatePickerField } from "@/components/admin/DatePickerField";
 import {
   type AdminSettingsData,
   type BlockedSlot,
@@ -47,6 +48,9 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
   const orderedDoctorSchedule = [...doctorSchedule].sort(
     (left, right) => sortWeekday(left.day_of_week) - sortWeekday(right.day_of_week),
   );
+  const reminderTiming = notificationSettings
+    ? `${notificationSettings.reminder_hours_before} ώρες πριν από το ραντεβού`
+    : "";
 
   return (
     <form action={saveAdminSettings} className="grid gap-6">
@@ -105,7 +109,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           {orderedDoctorSchedule.map((day) => (
             <div
               key={day.id}
-              className="grid gap-4 border border-line bg-background p-4 md:grid-cols-[1fr_130px_130px_120px]"
+              className="grid gap-4 border border-line bg-background p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_130px_130px_120px]"
             >
               <div>
                 <p className="text-sm font-semibold">{dayLabels[day.day_of_week]}</p>
@@ -145,7 +149,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           {scheduleBreaks.map((item) => (
             <div
               key={item.id}
-              className="grid gap-4 border border-line bg-background p-4 md:grid-cols-[1fr_130px_130px_120px]"
+              className="grid gap-4 border border-line bg-background p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_130px_130px_120px]"
             >
               <SelectField
                 label="Ημέρα"
@@ -165,7 +169,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
               <DeleteCheckbox name={`break_${item.id}_delete`} />
             </div>
           ))}
-          <div className="grid gap-4 border border-dashed border-line bg-background p-4 md:grid-cols-[1fr_130px_130px_120px]">
+          <div className="grid gap-4 border border-dashed border-line bg-background p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_130px_130px_120px]">
             <SelectField label="Νέο διάλειμμα" name="new_break_day_of_week" />
             <TimeSelectField label="Έναρξη" name="new_break_start_time" required={false} />
             <TimeSelectField label="Λήξη" name="new_break_end_time" required={false} />
@@ -226,7 +230,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           {blockedSlots.map((slot) => (
             <BlockedSlotRow key={slot.id} slot={slot} timezone={timezone} />
           ))}
-          <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[1fr_1fr_1fr_120px]">
+          <div className="grid gap-4 border border-dashed border-line bg-background p-4 md:grid-cols-2 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_120px]">
             <BlockedDateTimeField label="Μη διαθέσιμο από" name="new_blocked_start_at" required={false} />
             <BlockedDateTimeField label="Μη διαθέσιμο έως" name="new_blocked_end_at" required={false} />
             <TextField label="Αιτία" name="new_blocked_reason" defaultValue="" required={false} />
@@ -249,26 +253,31 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
                   label="Επιβεβαίωση νέου ραντεβού"
                   name="patient_confirmation_email_enabled"
                   defaultChecked={notificationSettings.patient_confirmation_email_enabled}
+                  description="Στέλνεται αμέσως μόλις ο ασθενής ολοκληρώσει την κράτηση."
                 />
                 <ToggleField
                   label="Υπενθύμιση ραντεβού"
                   name="patient_reminder_email_enabled"
                   defaultChecked={notificationSettings.patient_reminder_email_enabled}
+                  description={`Στέλνεται ${reminderTiming}.`}
                 />
                 <ToggleField
                   label="Επιβεβαίωση ακύρωσης"
                   name="patient_cancellation_email_enabled"
                   defaultChecked={notificationSettings.patient_cancellation_email_enabled}
+                  description="Στέλνεται αμέσως μόλις ακυρωθεί το ραντεβού."
                 />
                 <ToggleField
                   label="Επιβεβαίωση αλλαγής ώρας"
                   name="patient_reschedule_email_enabled"
                   defaultChecked={notificationSettings.patient_reschedule_email_enabled}
+                  description="Στέλνεται αμέσως μόλις αλλάξει ημέρα ή ώρα το ραντεβού."
                 />
                 <ToggleField
                   label="Αίτημα αξιολόγησης μετά την επίσκεψη"
                   name="patient_review_request_email_enabled"
                   defaultChecked={notificationSettings.patient_review_request_email_enabled}
+                  description="Στέλνεται μετά την ολοκλήρωση της επίσκεψης, συνήθως 24-48 ώρες αργότερα."
                 />
               </div>
             </div>
@@ -280,31 +289,36 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
                   label="Νέο ραντεβού"
                   name="doctor_new_booking_email_enabled"
                   defaultChecked={notificationSettings.doctor_new_booking_email_enabled}
+                  description="Στέλνεται αμέσως μόλις δημιουργηθεί νέο ραντεβού."
                 />
                 <ToggleField
                   label="Υπενθύμιση ραντεβού"
                   name="doctor_reminder_email_enabled"
                   defaultChecked={notificationSettings.doctor_reminder_email_enabled}
+                  description={`Στέλνεται ${reminderTiming}.`}
                 />
                 <ToggleField
                   label="Ακύρωση ραντεβού"
                   name="doctor_cancellation_email_enabled"
                   defaultChecked={notificationSettings.doctor_cancellation_email_enabled}
+                  description="Στέλνεται αμέσως μόλις ακυρωθεί ραντεβού."
                 />
                 <ToggleField
                   label="Αλλαγή ώρας"
                   name="doctor_reschedule_email_enabled"
                   defaultChecked={notificationSettings.doctor_reschedule_email_enabled}
+                  description="Στέλνεται αμέσως μόλις αλλάξει ημέρα ή ώρα ένα ραντεβού."
                 />
               </div>
             </div>
 
             <NumberField
-              label="Πότε στέλνεται υπενθύμιση"
+              label="Ώρες πριν το ραντεβού"
               name="reminder_hours_before"
               defaultValue={notificationSettings.reminder_hours_before}
               min={1}
               suffix="ώρες πριν"
+              description="Ορίζει πότε θα σταλεί το email “Υπενθύμιση ραντεβού” στον ασθενή και στον γιατρό. Δεν επηρεάζει επιβεβαιώσεις, ακυρώσεις ή αλλαγές ώρας."
               compact
             />
           </div>
@@ -346,7 +360,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
         />
         <AppointmentTypesOrderList appointmentTypes={appointmentTypes} />
         <div className="mt-4 grid gap-4">
-          <div className="grid gap-4 border border-dashed border-line bg-background p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px]">
+          <div className="grid gap-4 border border-dashed border-line bg-background p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px]">
             <TextField
               label="Νέος τύπος στα Ελληνικά"
               name="new_appointment_type_name_el"
@@ -366,7 +380,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
               suffix="min"
               required={false}
             />
-            <p className="text-sm text-muted lg:col-span-3">
+            <p className="text-sm text-muted md:col-span-2 xl:col-span-3">
               Προσθήκη με αποθήκευση
             </p>
           </div>
@@ -394,7 +408,7 @@ function BlockedSlotRow({
   timezone: string;
 }) {
   return (
-    <div className="grid gap-4 border border-line bg-background p-4 lg:grid-cols-[1fr_1fr_1fr_120px]">
+    <div className="grid gap-4 border border-line bg-background p-4 md:grid-cols-2 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_120px]">
       <BlockedDateTimeField
         label="Από"
         name={`blocked_${slot.id}_start_at`}
@@ -615,14 +629,8 @@ function BlockedDateTimeField({
   return (
     <fieldset className="grid gap-2 text-sm font-medium">
       {label}
-      <div className="grid gap-2 sm:grid-cols-[1fr_120px]">
-        <input
-          name={`${name}_date`}
-          type="date"
-          defaultValue={date}
-          required={required}
-          className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
-        />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <DatePickerField name={`${name}_date`} defaultValue={date} required={required} />
         <select
           name={`${name}_time`}
           defaultValue={time}
@@ -682,19 +690,28 @@ function ToggleField({
   label,
   name,
   defaultChecked,
+  description,
 }: {
   label: string;
   name: string;
   defaultChecked: boolean;
+  description?: string;
 }) {
   return (
-    <label className="flex min-h-11 items-center justify-between gap-4 rounded-sm border border-line bg-surface px-3 text-sm font-medium">
-      <span>{label}</span>
+    <label className="flex min-h-11 items-start justify-between gap-4 rounded-sm border border-line bg-surface px-3 py-3 text-sm font-medium">
+      <span>
+        <span className="block">{label}</span>
+        {description ? (
+          <span className="mt-1 block text-xs font-normal leading-5 text-muted">
+            {description}
+          </span>
+        ) : null}
+      </span>
       <input
         type="checkbox"
         name={name}
         defaultChecked={defaultChecked}
-        className="h-5 w-5 accent-[var(--accent)]"
+        className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--accent)]"
       />
     </label>
   );
@@ -713,7 +730,7 @@ function splitDateTimeValue(value: string) {
   const [year, month, day] = datePart.split("-");
 
   return {
-    date: year && month && day ? `${year}-${month}-${day}` : "",
+    date: year && month && day ? `${day}/${month}/${year}` : "",
     time: timePart.slice(0, 5),
   };
 }

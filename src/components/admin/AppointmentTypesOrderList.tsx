@@ -55,7 +55,7 @@ function AppointmentTypeRow({
         zIndex: 10,
       }}
       transition={{ type: "spring", stiffness: 420, damping: 32 }}
-      className="grid gap-4 border border-line bg-background p-4 transition-colors hover:border-champagne lg:grid-cols-[34px_1fr_1fr_150px_120px_120px]"
+      className="grid gap-4 border border-line bg-background p-4 transition-colors hover:border-champagne md:grid-cols-2 xl:grid-cols-[34px_minmax(0,1fr)_minmax(0,1fr)_150px_120px_120px]"
     >
       <button
         type="button"

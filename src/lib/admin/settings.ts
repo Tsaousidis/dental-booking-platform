@@ -257,6 +257,10 @@ export async function saveAdminSettings(formData: FormData) {
   });
 
   revalidatePath("/admin/settings");
+  revalidatePath("/el", "layout");
+  revalidatePath("/en", "layout");
+  revalidatePath("/el/contact");
+  revalidatePath("/en/contact");
 }
 
 async function updateAppointmentType(formData: FormData, id: string) {

@@ -8,6 +8,7 @@ import { StickyMobileBookingCTA } from "@/components/layout/StickyMobileBookingC
 import { StructuredData } from "@/components/public/StructuredData";
 import { isLocale, locales, type Locale } from "@/config/locales";
 import { getDictionary } from "@/lib/i18n";
+import { getPublicClinicProfile } from "@/lib/public/clinic-profile";
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -27,7 +28,10 @@ export default async function LocaleLayout({
   }
 
   const activeLocale = locale satisfies Locale;
-  const dictionary = await getDictionary(activeLocale);
+  const [dictionary, clinicProfile] = await Promise.all([
+    getDictionary(activeLocale),
+    getPublicClinicProfile(),
+  ]);
   const cookieStore = await cookies();
   const hasStoredCookieConsent = Boolean(cookieStore.get("dental_cookie_consent"));
 
@@ -35,8 +39,8 @@ export default async function LocaleLayout({
     <div className="min-h-screen bg-background text-foreground">
       <PublicHeader locale={activeLocale} dictionary={dictionary} />
       <main data-locale={activeLocale}>{children}</main>
-      <StructuredData />
-      <PublicFooter locale={activeLocale} dictionary={dictionary} />
+      <StructuredData clinicProfile={clinicProfile} />
+      <PublicFooter locale={activeLocale} dictionary={dictionary} clinicProfile={clinicProfile} />
       <StickyMobileBookingCTA locale={activeLocale} dictionary={dictionary} />
       <CookieBanner dictionary={dictionary} hasStoredConsent={hasStoredCookieConsent} />
     </div>
