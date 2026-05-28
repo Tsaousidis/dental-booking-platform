@@ -159,13 +159,6 @@ export function ContactContent({
         </form>
       </div>
 
-      <div className="flex min-h-[420px] items-end rounded-lg border border-line/50 bg-[linear-gradient(135deg,rgba(255,255,255,0.86),rgba(250,249,247,0.42)),url('https://images.unsplash.com/photo-1629909615184-74f495363b67?auto=format&fit=crop&w=1400&q=80')] bg-cover bg-center ambient-shadow">
-        <div className="m-5 max-w-md rounded-lg bg-surface/90 p-6 backdrop-blur">
-          <h2 className="text-2xl font-medium">{copy.mapTitle}</h2>
-          <p className="mt-3 text-base leading-7 text-muted">{copy.mapBody}</p>
-        </div>
-      </div>
-
       <section className="rounded-lg bg-accent p-8 text-surface sm:p-10">
         <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
           <div>

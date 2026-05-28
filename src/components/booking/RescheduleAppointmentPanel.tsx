@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { type Locale } from "@/config/locales";
 import { type AvailableDay } from "@/lib/booking/availability";
@@ -97,6 +98,21 @@ export function RescheduleAppointmentPanel({
 
   const selectedDay = days.find((day) => day.date === selectedDate);
   const selectedSlot = selectedDay?.slots.find((slot) => slot.startAt === selectedSlotStart);
+  const availableDates = useMemo(() => new Set(days.map((day) => day.date)), [days]);
+  const monthOptions = useMemo(() => {
+    const months = Array.from(new Set(days.map((day) => day.date.slice(0, 7))));
+    return months.length > 0 ? months : [formatMonthKey(new Date())];
+  }, [days]);
+  const [visibleMonth, setVisibleMonth] = useState(
+    selectedDate ? selectedDate.slice(0, 7) : monthOptions[0],
+  );
+  const activeMonth = monthOptions.includes(visibleMonth)
+    ? visibleMonth
+    : selectedDate
+      ? selectedDate.slice(0, 7)
+      : monthOptions[0];
+  const activeMonthIndex = Math.max(monthOptions.indexOf(activeMonth), 0);
+  const calendarCells = useMemo(() => buildCalendarCells(activeMonth), [activeMonth]);
 
   async function submitReschedule() {
     if (!selectedSlot || isSubmitting) {
@@ -166,38 +182,83 @@ export function RescheduleAppointmentPanel({
             {t.noSlots}
           </p>
         ) : null}
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {days.map((day) => (
+        <div className="mt-4 rounded-lg border border-line/60 bg-surface p-4">
+          <div className="mb-5 flex items-center justify-between gap-4">
             <button
-              key={day.date}
               type="button"
-              onClick={() => {
-                setSelectedDate(day.date);
-                setSelectedSlotStart("");
-              }}
-              className={`min-h-20 border p-4 text-left transition ${
-                day.date === selectedDate
-                  ? "border-foreground bg-background"
-                  : "border-line bg-surface hover:border-accent"
-              }`}
+              disabled={activeMonthIndex === 0}
+              onClick={() => setVisibleMonth(monthOptions[activeMonthIndex - 1] ?? activeMonth)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-line text-accent transition hover:border-accent disabled:cursor-not-allowed disabled:opacity-35"
+              aria-label="Previous month"
             >
-              <span className="block text-sm font-semibold">{formatDate(day.date, locale)}</span>
-              <span className="mt-2 block text-xs text-muted">{day.slots.length} slots</span>
+              <ChevronLeft size={18} aria-hidden="true" />
             </button>
-          ))}
+            <h3 className="text-lg font-medium text-foreground">
+              {formatMonthLabel(activeMonth, locale)}
+            </h3>
+            <button
+              type="button"
+              disabled={activeMonthIndex >= monthOptions.length - 1}
+              onClick={() => setVisibleMonth(monthOptions[activeMonthIndex + 1] ?? activeMonth)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-line text-accent transition hover:border-accent disabled:cursor-not-allowed disabled:opacity-35"
+              aria-label="Next month"
+            >
+              <ChevronRight size={18} aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1 text-center">
+            {getWeekdayLabels(locale).map((label, index) => (
+              <div
+                key={label}
+                className={`py-2 text-[11px] font-semibold uppercase tracking-[0.12em] ${index >= 5 ? "text-muted/70" : "text-muted"}`}
+              >
+                {label}
+              </div>
+            ))}
+            {calendarCells.map((cell, index) => {
+              if (!cell) {
+                return <div key={`empty-${index}`} className="min-h-12" aria-hidden="true" />;
+              }
+
+              const isAvailable = availableDates.has(cell.date);
+              const isSelected = cell.date === selectedDate;
+
+              return (
+                <button
+                  key={cell.date}
+                  type="button"
+                  disabled={!isAvailable}
+                  onClick={() => {
+                    setSelectedDate(cell.date);
+                    setSelectedSlotStart("");
+                  }}
+                  className={`min-h-12 rounded-sm border p-1.5 text-sm transition sm:min-h-16 ${
+                    isSelected
+                      ? "border-accent bg-accent text-surface"
+                      : isAvailable
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-950 hover:border-accent hover:bg-surface-low"
+                        : "border-slate-200 bg-slate-50 text-slate-400"
+                  }`}
+                >
+                  <span className="block font-semibold">{cell.dayNumber}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 
       {selectedDay ? (
         <section className="mt-8 border-t border-line pt-8">
           <h2 className="text-xl font-semibold">{t.chooseTime}</h2>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3">
             {selectedDay.slots.map((slot) => (
               <button
                 key={slot.startAt}
                 type="button"
                 onClick={() => setSelectedSlotStart(slot.startAt)}
-                className={`min-h-11 border px-4 text-sm font-semibold transition ${
+                className={`min-h-10 rounded-sm border px-2 text-xs font-semibold transition sm:min-h-11 sm:px-4 sm:text-sm ${
                   slot.startAt === selectedSlotStart
                     ? "border-foreground bg-foreground text-background"
                     : "border-line bg-surface hover:border-accent"
@@ -269,10 +330,48 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function formatDate(date: string, locale: Locale) {
+function buildCalendarCells(monthKey: string) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const firstDay = new Date(year, month - 1, 1, 12);
+  const lastDay = new Date(year, month, 0, 12);
+  const leadingEmptyCells = (firstDay.getDay() + 6) % 7;
+  const cells: Array<{ date: string; dayNumber: number } | null> = Array.from(
+    { length: leadingEmptyCells },
+    () => null,
+  );
+
+  for (let day = 1; day <= lastDay.getDate(); day += 1) {
+    const date = new Date(year, month - 1, day, 12);
+    cells.push({
+      date: formatLocalDate(date),
+      dayNumber: day,
+    });
+  }
+
+  return cells;
+}
+
+function formatLocalDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatMonthKey(date: Date) {
+  return formatLocalDate(date).slice(0, 7);
+}
+
+function formatMonthLabel(monthKey: string, locale: Locale) {
   return new Intl.DateTimeFormat(locale === "el" ? "el-GR" : "en-US", {
-    weekday: "long",
-    day: "numeric",
     month: "long",
-  }).format(new Date(`${date}T12:00:00`));
+    year: "numeric",
+  }).format(new Date(`${monthKey}-01T12:00:00`));
+}
+
+function getWeekdayLabels(locale: Locale) {
+  return locale === "el"
+    ? ["ΔΕ", "ΤΡ", "ΤΕ", "ΠΕ", "ΠΑ", "ΣΑ", "ΚΥ"]
+    : ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 }

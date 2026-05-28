@@ -439,20 +439,20 @@ function StepTreatment({
   return (
     <div>
       <StepHeading icon={<CalendarDays size={20} />} title={copy.chooseTreatment} />
-      <div className="mt-6 grid gap-3 md:grid-cols-2">
+      <div className="mt-6 grid gap-2 md:grid-cols-2 md:gap-3">
         {appointmentTypes.map((type) => (
           <button
             key={type.id}
             type="button"
             onClick={() => onSelect(type.id)}
-            className={`min-h-32 rounded-lg border p-5 text-left transition hover:-translate-y-0.5 ${
+            className={`flex min-h-16 items-center justify-between gap-4 rounded-lg border p-4 text-left transition hover:-translate-y-0.5 md:block md:min-h-32 md:p-5 ${
               type.id === selectedTypeId
                 ? "border-accent bg-surface-low"
                 : "border-line/70 bg-surface hover:border-accent"
             }`}
           >
-            <span className="text-lg font-medium">{type.name}</span>
-            <span className="mt-4 block text-sm text-muted">
+            <span className="text-base font-semibold md:text-lg md:font-medium">{type.name}</span>
+            <span className="shrink-0 text-sm text-muted md:mt-4 md:block">
               {type.durationMinutes} {copy.minutes}
             </span>
           </button>
@@ -532,7 +532,7 @@ function StepDay({
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 text-center">
+          <div className="grid grid-cols-7 gap-1 text-center sm:gap-1.5">
             {getWeekdayLabels(locale).map((label, index) => (
               <div
                 key={label}
@@ -558,6 +558,12 @@ function StepDay({
                 isWeekend: cell.isWeekend,
               });
               const isUnavailable = !isAvailable && !isPast;
+              const mobileStatusClass = getCalendarMobileStatusClass({
+                day,
+                isPast,
+                isWeekend: cell.isWeekend,
+                isSelected,
+              });
 
               return (
                 <button
@@ -565,7 +571,7 @@ function StepDay({
                   type="button"
                   disabled={!isAvailable}
                   onClick={() => onSelect(cell.date)}
-                  className={`min-h-16 rounded-sm border p-2 text-sm transition sm:min-h-20 ${
+                  className={`min-h-12 rounded-sm border p-1.5 text-sm transition sm:min-h-20 sm:p-2 ${mobileStatusClass} ${
                     isSelected
                       ? "border-accent bg-accent text-surface"
                       : isAvailable
@@ -579,16 +585,26 @@ function StepDay({
                 >
                   <span className="block font-semibold">{cell.dayNumber}</span>
                   {isToday ? (
-                    <span className={`mt-1 block text-[10px] font-semibold ${isSelected ? "text-surface/80" : "text-accent"}`}>
+                    <span className={`mx-auto mt-1 block h-1.5 w-1.5 rounded-full sm:hidden ${isSelected ? "bg-surface" : "bg-accent"}`} />
+                  ) : null}
+                  {isToday ? (
+                    <span className={`mt-1 hidden text-[10px] font-semibold sm:block ${isSelected ? "text-surface/80" : "text-accent"}`}>
                       {copy.todayLabel}
                     </span>
                   ) : null}
-                  <span className={`mt-1 block text-[11px] ${isSelected ? "text-surface/75" : "text-muted"}`}>
+                  <span className={`mt-1 hidden text-[11px] sm:block ${isSelected ? "text-surface/75" : "text-muted"}`}>
                     {statusLabel}
                   </span>
                 </button>
               );
             })}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-3 text-[11px] text-muted sm:hidden">
+            <CalendarLegendItem className="border-emerald-200 bg-emerald-50" label={copy.availableLabel} />
+            <CalendarLegendItem className="border-stone-200 bg-stone-50" label={copy.pastLabel} />
+            <CalendarLegendItem className="border-slate-200 bg-slate-50" label={copy.closedLabel} />
+            <CalendarLegendItem className="border-amber-200 bg-amber-50" label={copy.fullyBookedLabel} />
           </div>
 
           {selectedDate ? (
@@ -675,6 +691,45 @@ function getCalendarStatusLabel({
   return copy.fullyBookedLabel;
 }
 
+function getCalendarMobileStatusClass({
+  day,
+  isPast,
+  isWeekend,
+  isSelected,
+}: {
+  day: AvailableDay | undefined;
+  isPast: boolean;
+  isWeekend: boolean;
+  isSelected: boolean;
+}) {
+  if (isSelected) {
+    return "";
+  }
+
+  if (day?.status === "available") {
+    return "max-sm:border-emerald-200 max-sm:bg-emerald-50 max-sm:text-emerald-950";
+  }
+
+  if (isPast) {
+    return "max-sm:border-stone-200 max-sm:bg-stone-50 max-sm:text-stone-400";
+  }
+
+  if (day?.status === "closed" || (!day && isWeekend)) {
+    return "max-sm:border-slate-200 max-sm:bg-slate-50 max-sm:text-slate-400";
+  }
+
+  return "max-sm:border-amber-200 max-sm:bg-amber-50 max-sm:text-amber-950";
+}
+
+function CalendarLegendItem({ className, label }: { className: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className={`h-3 w-3 rounded-[3px] border ${className}`} />
+      {label}
+    </span>
+  );
+}
+
 function isBookableDay(day: AvailableDay) {
   return day.status === "available" && day.slots.length > 0;
 }
@@ -693,13 +748,13 @@ function StepTime({
   return (
     <div>
       <StepHeading icon={<Clock size={20} />} title={copy.chooseTime} />
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
         {slots.map((slot) => (
           <button
             key={slot.startAt}
             type="button"
             onClick={() => onSelect(slot.startAt)}
-            className={`min-h-12 rounded-sm border px-4 text-sm font-semibold transition hover:-translate-y-0.5 ${
+            className={`min-h-10 rounded-sm border px-2 text-xs font-semibold transition hover:-translate-y-0.5 sm:min-h-12 sm:px-4 sm:text-sm ${
               slot.startAt === selectedSlotStart
                 ? "border-accent bg-accent text-surface"
                 : "border-line/70 bg-surface hover:border-accent"

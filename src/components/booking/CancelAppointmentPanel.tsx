@@ -95,7 +95,6 @@ export function CancelAppointmentPanel({
         <ReviewRow label={t.email} value={appointment.patientEmail} />
         <ReviewRow label={t.treatment} value={appointment.appointmentTypeName} />
         <ReviewRow label={t.time} value={appointment.appointmentTime} />
-        <ReviewRow label={t.status} value={isCancelled ? "cancelled" : appointment.status} />
       </dl>
 
       {isCancelled ? (
