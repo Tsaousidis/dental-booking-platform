@@ -80,7 +80,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
         value={blockedSlots.map((item) => item.id).join(",")}
       />
 
-      <section className="border border-line bg-surface p-6">
+      <section className="border border-line bg-surface p-5 sm:p-6">
         <SectionHeader
           title="Προφίλ κλινικής"
           description="Βασικά στοιχεία που χρησιμοποιούνται στην ιστοσελίδα και στα emails."
@@ -100,7 +100,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
         </div>
       </section>
 
-      <section className="border border-line bg-surface p-6">
+      <section className="border border-line bg-surface p-5 sm:p-6">
         <SectionHeader
           title="Εργάσιμες ώρες ανά ημέρα"
           description="Εργάσιμες ημέρες και ώρες."
@@ -109,9 +109,9 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           {orderedDoctorSchedule.map((day) => (
             <div
               key={day.id}
-              className="grid gap-4 border border-line bg-background p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_130px_130px_120px]"
+              className="grid grid-cols-2 gap-3 border border-line bg-background p-3 sm:p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_130px_130px_120px]"
             >
-              <div>
+              <div className="col-span-2 xl:col-span-1">
                 <p className="text-sm font-semibold">{dayLabels[day.day_of_week]}</p>
               </div>
               <TimeSelectField
@@ -126,7 +126,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
                 defaultValue={normalizeTime(day.end_time)}
                 required={false}
               />
-              <label className="flex items-end gap-3 pb-3 text-sm font-medium">
+              <label className="col-span-2 flex items-center gap-3 text-sm font-medium xl:col-span-1 xl:items-end xl:pb-3">
                 <input
                   type="checkbox"
                   name={`schedule_${day.id}_is_working`}
@@ -140,7 +140,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
         </div>
       </section>
 
-      <section className="border border-line bg-surface p-6">
+      <section className="border border-line bg-surface p-5 sm:p-6">
         <SectionHeader
           title="Διαλείμματα"
           description="Αφαιρούνται από τη διαθεσιμότητα και δεν επιτρέπουν κράτηση."
@@ -149,7 +149,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
           {scheduleBreaks.map((item) => (
             <div
               key={item.id}
-              className="grid gap-4 border border-line bg-background p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_130px_130px_120px]"
+              className="grid grid-cols-2 gap-3 border border-line bg-background p-3 sm:p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_130px_130px_120px]"
             >
               <SelectField
                 label="Ημέρα"
@@ -166,14 +166,14 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
                 name={`break_${item.id}_end_time`}
                 defaultValue={normalizeTime(item.end_time)}
               />
-              <DeleteCheckbox name={`break_${item.id}_delete`} />
+              <DeleteCheckbox name={`break_${item.id}_delete`} compact />
             </div>
           ))}
-          <div className="grid gap-4 border border-dashed border-line bg-background p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_130px_130px_120px]">
+          <div className="grid grid-cols-2 gap-3 border border-dashed border-line bg-background p-3 sm:p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_130px_130px_120px]">
             <SelectField label="Νέο διάλειμμα" name="new_break_day_of_week" />
             <TimeSelectField label="Έναρξη" name="new_break_start_time" required={false} />
             <TimeSelectField label="Λήξη" name="new_break_end_time" required={false} />
-            <p className="flex items-end pb-3 text-sm text-muted">Προσθήκη με αποθήκευση</p>
+            <p className="col-span-2 text-sm text-muted xl:col-span-1 xl:flex xl:items-end xl:pb-3">Προσθήκη με αποθήκευση</p>
           </div>
         </div>
       </section>
@@ -360,7 +360,7 @@ export function SettingsForm({ data }: { data: AdminSettingsData }) {
         />
         <AppointmentTypesOrderList appointmentTypes={appointmentTypes} />
         <div className="mt-4 grid gap-4">
-          <div className="grid gap-4 border border-dashed border-line bg-background p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px]">
+          <div className="grid gap-3 border border-dashed border-line bg-background p-3 sm:p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_150px]">
             <TextField
               label="Νέος τύπος στα Ελληνικά"
               name="new_appointment_type_name_el"
@@ -460,7 +460,7 @@ function TextField({
         type={type}
         defaultValue={defaultValue}
         required={required}
-        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        className="min-h-10 rounded-sm border border-line bg-background px-3 text-sm outline-none transition focus:border-accent sm:min-h-11 sm:text-base"
       />
     </label>
   );
@@ -561,7 +561,7 @@ function TimezoneSelectField({
         name={name}
         defaultValue={defaultValue}
         required
-        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        className="min-h-10 rounded-sm border border-line bg-background px-3 text-sm outline-none transition focus:border-accent sm:min-h-11 sm:text-base"
       >
         {options.map((timezone) => (
           <option key={timezone} value={timezone}>
@@ -600,7 +600,7 @@ function TimeSelectField({
         name={name}
         defaultValue={defaultValue}
         required={required}
-        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        className="min-h-10 rounded-sm border border-line bg-background px-3 text-sm outline-none transition focus:border-accent sm:min-h-11 sm:text-base"
       >
         <option value="">--:--</option>
         {timeSelectOptions.map((time) => (
@@ -635,7 +635,7 @@ function BlockedDateTimeField({
           name={`${name}_time`}
           defaultValue={time}
           required={required}
-          className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+          className="min-h-10 rounded-sm border border-line bg-background px-3 text-sm outline-none transition focus:border-accent sm:min-h-11 sm:text-base"
         >
           <option value="">--:--</option>
           {timeSelectOptions.map((option) => (
@@ -664,7 +664,7 @@ function SelectField({
       <select
         name={name}
         defaultValue={defaultValue}
-        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        className="min-h-10 rounded-sm border border-line bg-background px-3 text-sm outline-none transition focus:border-accent sm:min-h-11 sm:text-base"
       >
         <option value="">Επιλογή</option>
         {dayLabels.map((label, index) => (
@@ -677,9 +677,13 @@ function SelectField({
   );
 }
 
-function DeleteCheckbox({ name }: { name: string }) {
+function DeleteCheckbox({ name, compact = false }: { name: string; compact?: boolean }) {
   return (
-    <label className="flex items-end gap-3 pb-3 text-sm font-medium text-red-700">
+    <label
+      className={`flex gap-3 text-sm font-medium text-red-700 ${
+        compact ? "col-span-2 items-center xl:col-span-1 xl:items-end xl:pb-3" : "items-end pb-3"
+      }`}
+    >
       <input type="checkbox" name={name} className="h-5 w-5 accent-red-700" />
       Διαγραφή
     </label>

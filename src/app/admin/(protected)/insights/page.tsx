@@ -60,16 +60,16 @@ export default async function AdminInsightsPage({
         ))}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
         {metricLabels.map(([label, key, display, helper]) => (
           <section
             key={key}
-            className="flex min-h-44 flex-col items-center justify-center rounded-lg border border-line bg-surface p-5 text-center ambient-shadow"
+            className="flex min-h-32 flex-col justify-between rounded-lg border border-line bg-surface p-3 ambient-shadow sm:min-h-44 sm:items-center sm:justify-center sm:p-5 sm:text-center"
           >
-            <p className="text-sm text-muted">{label}</p>
-            <p className="mt-4 text-3xl font-semibold">{insights.metrics[key]}</p>
+            <p className="text-xs leading-5 text-muted sm:text-sm">{label}</p>
+            <p className="mt-2 text-2xl font-semibold sm:mt-4 sm:text-3xl">{insights.metrics[key]}</p>
             {display === "status" ? (
-              <div className="mt-5 flex justify-center">
+              <div className="mt-3 flex justify-start sm:mt-5 sm:justify-center">
                 <MiniDonut
                   value={insights.metrics[key]}
                   total={Math.max(insights.metrics.totalBookings, 1)}
@@ -78,7 +78,7 @@ export default async function AdminInsightsPage({
                 />
               </div>
             ) : (
-              <p className="mt-4 min-h-10 max-w-56 text-xs leading-5 text-muted">{helper}</p>
+              <p className="mt-2 text-[11px] leading-4 text-muted sm:mt-4 sm:min-h-10 sm:max-w-56 sm:text-xs sm:leading-5">{helper}</p>
             )}
           </section>
         ))}
@@ -125,26 +125,32 @@ function InsightChart({
           Δεν υπάρχουν ακόμα αρκετά δεδομένα.
         </p>
       ) : (
-        <div className="mt-5 grid max-w-xl gap-3">
-          {rows.map((row, index) => {
-            const percentage = Math.round((row.value / maxValue) * 100);
+        <div className="mt-5 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start gap-4">
+          <div className="grid gap-3 pt-1">
+            {rows.map((row, index) => {
+              const percentage = Math.round((row.value / maxValue) * 100);
 
-            return (
-              <div key={row.label} className="grid gap-2">
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="font-medium">{row.label}</span>
-                  <span className="text-muted">{row.value}</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-sm bg-background">
+              return (
+                <div key={`${row.label}-bar`} className="h-3 overflow-hidden rounded-sm bg-background">
                   <div
                     className={getBarClassName(index, variant)}
                     style={{ width: `${percentage}%` }}
                     aria-label={`${row.label}: ${row.value}`}
                   />
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+          <div className="grid min-w-0 gap-3">
+            {rows.map((row) => {
+              return (
+                <div key={row.label} className="flex min-h-3 items-center justify-between gap-3 text-sm">
+                  <span className="min-w-0 truncate font-medium">{row.label}</span>
+                  <span className="shrink-0 text-muted">{row.value}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </section>
@@ -168,8 +174,8 @@ function MiniDonut({
   const strokeDasharray = `${circumference * ratio} ${circumference}`;
 
   return (
-    <div className="flex items-center justify-center gap-4">
-      <svg viewBox="0 0 44 44" className="h-16 w-16 -rotate-90" aria-label={label}>
+    <div className="flex items-center justify-start gap-2 sm:justify-center sm:gap-4">
+      <svg viewBox="0 0 44 44" className="h-10 w-10 -rotate-90 sm:h-16 sm:w-16" aria-label={label}>
         <circle cx="22" cy="22" r={radius} fill="none" stroke="rgba(23,23,23,0.12)" strokeWidth="5" />
         <circle
           cx="22"
@@ -183,8 +189,8 @@ function MiniDonut({
         />
       </svg>
       <div className="text-left">
-        <p className="text-base font-semibold">{value === 0 ? "Καμία" : `${Math.round(ratio * 100)}%`}</p>
-        <p className="text-xs leading-5 text-muted">{helper}</p>
+        <p className="text-sm font-semibold sm:text-base">{value === 0 ? "Καμία" : `${Math.round(ratio * 100)}%`}</p>
+        <p className="line-clamp-2 text-[10px] leading-4 text-muted sm:text-xs sm:leading-5">{helper}</p>
       </div>
     </div>
   );

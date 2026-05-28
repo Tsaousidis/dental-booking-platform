@@ -55,7 +55,7 @@ function AppointmentTypeRow({
         zIndex: 10,
       }}
       transition={{ type: "spring", stiffness: 420, damping: 32 }}
-      className="grid gap-4 border border-line bg-background p-4 transition-colors hover:border-champagne md:grid-cols-2 xl:grid-cols-[34px_minmax(0,1fr)_minmax(0,1fr)_150px_120px_120px]"
+      className="grid grid-cols-[34px_minmax(0,1fr)] gap-3 border border-line bg-background p-3 transition-colors hover:border-champagne sm:p-4 md:grid-cols-2 xl:grid-cols-[34px_minmax(0,1fr)_minmax(0,1fr)_150px_120px_120px]"
     >
       <button
         type="button"
@@ -70,23 +70,25 @@ function AppointmentTypeRow({
         name={`appointment_type_${type.id}_sort_order`}
         value={(index + 1) * 10}
       />
-      <AppointmentTextField
-        label="Όνομα στα Ελληνικά"
-        name={`appointment_type_${type.id}_name_el`}
-        defaultValue={type.name_el}
-      />
-      <AppointmentTextField
-        label="Όνομα στα Αγγλικά"
-        name={`appointment_type_${type.id}_name_en`}
-        defaultValue={type.name_en}
-      />
+      <div className="grid gap-3 md:contents">
+        <AppointmentTextField
+          label="Όνομα στα Ελληνικά"
+          name={`appointment_type_${type.id}_name_el`}
+          defaultValue={type.name_el}
+        />
+        <AppointmentTextField
+          label="Όνομα στα Αγγλικά"
+          name={`appointment_type_${type.id}_name_en`}
+          defaultValue={type.name_en}
+        />
+      </div>
       <AppointmentNumberField
         label="Διάρκεια"
         name={`appointment_type_${type.id}_duration_minutes`}
         defaultValue={type.duration_minutes}
         suffix="min"
       />
-      <label className="flex items-end gap-3 pb-3 text-sm font-medium">
+      <label className="flex items-center gap-3 text-sm font-medium xl:items-end xl:pb-3">
         <input
           type="checkbox"
           name={`appointment_type_${type.id}_is_active`}
@@ -95,7 +97,7 @@ function AppointmentTypeRow({
         />
         Ενεργό
       </label>
-      <label className="flex items-end gap-3 pb-3 text-sm font-medium text-red-600">
+      <label className="flex items-center gap-3 text-sm font-medium text-red-600 xl:items-end xl:pb-3">
         <input
           type="checkbox"
           name={`appointment_type_${type.id}_delete`}
@@ -123,7 +125,7 @@ function AppointmentTextField({
         name={name}
         defaultValue={defaultValue}
         required
-        className="min-h-11 rounded-sm border border-line bg-background px-3 text-base outline-none transition focus:border-accent"
+        className="min-h-10 rounded-sm border border-line bg-background px-3 text-sm outline-none transition focus:border-accent sm:min-h-11 sm:text-base"
       />
     </label>
   );
@@ -143,14 +145,14 @@ function AppointmentNumberField({
   return (
     <label className="grid min-w-0 gap-2 text-sm font-medium">
       {label}
-      <span className="flex min-h-11 w-full min-w-0 items-center rounded-sm border border-line bg-background focus-within:border-accent">
+      <span className="flex min-h-10 w-full min-w-0 items-center rounded-sm border border-line bg-background focus-within:border-accent sm:min-h-11">
         <input
           name={name}
           type="number"
           min={1}
           defaultValue={defaultValue}
           required
-          className="w-full min-w-0 flex-1 bg-transparent px-3 text-base outline-none"
+          className="w-full min-w-0 flex-1 bg-transparent px-3 text-sm outline-none sm:text-base"
         />
         <span className="pr-3 text-sm text-muted">{suffix}</span>
       </span>
